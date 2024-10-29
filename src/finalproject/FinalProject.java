@@ -14,7 +14,7 @@ import javafx.stage.Stage;
 
 /**
  *
- * @author ritatrindadedacruz
+ * @author Rita Trindade ,Andrea Sosa
  */
 public class FinalProject extends Application {
     
