@@ -1,3 +1,12 @@
-/build/
-/dist/
-Libraries/mysql-connector-j-9.0.0.jar
+# Ignorar todas las librerías y dependencias locales
+Libraries/
+
+# Ignorar archivos específicos de Java
+*.class
+*.jar
+*.war
+
+# Ignorar archivos generados por NetBeans
+nbproject/private/
+build/
+dist/

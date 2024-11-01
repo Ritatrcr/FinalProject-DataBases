@@ -10,74 +10,94 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class FinalProject extends Application {
 
+    private Stage primaryStage;
+    private Scene connectionScene;
+    private Scene databaseSelectionScene;
+    private ComboBox<String> databaseComboBox;
+    private TextArea terminalOutput;
+
+    // Variables para almacenar los datos de conexión
+    private String ip;
+    private String port;
+    private String username;
+    private String password;
+
     @Override
     public void start(Stage primaryStage) {
+        this.primaryStage = primaryStage;
         primaryStage.setTitle("Conectar a Base de Datos");
 
-        // Etiqueta y campo para ingresar la IP del servidor
+        // Crear las escenas
+        connectionScene = createConnectionScene();
+        databaseSelectionScene = createDatabaseSelectionScene();
+
+        // Mostrar la primera escena
+        primaryStage.setScene(connectionScene);
+        primaryStage.show();
+    }
+
+    private Scene createConnectionScene() {
+        // Componentes de conexión
         Label labelIP = new Label("IP del Servidor:");
-        TextField textFieldIP = new TextField("localhost");  // Valor predeterminado "localhost"
+        TextField textFieldIP = new TextField("localhost");
 
-        // Etiqueta y campo para ingresar el puerto de conexión
         Label labelPort = new Label("Puerto:");
-        TextField textFieldPort = new TextField("3306");     // Puerto predeterminado 3306 para MySQL
+        TextField textFieldPort = new TextField("3306");
 
-        // Etiqueta y campo para ingresar el nombre de usuario
         Label labelUsername = new Label("Usuario:");
-        TextField textFieldUsername = new TextField("root"); // Nombre de usuario predeterminado "root"
+        TextField textFieldUsername = new TextField("root");
 
-        // Etiqueta y campo para ingresar la contraseña (se muestra en texto claro)
         Label labelPassword = new Label("Contraseña:");
-        TextField passwordField = new TextField(); // Utiliza TextField en lugar de PasswordField para mostrar la contraseña
+        TextField passwordField = new TextField();
 
-        // Botón para iniciar la conexión
         Button connectButton = new Button("Conectar");
-
-        // Botón "Siguiente" que puede usarse para navegar después de una conexión exitosa
         Button nextButton = new Button("Siguiente");
-        nextButton.setDisable(true); // Desactivado inicialmente hasta que la conexión sea exitosa
+        nextButton.setDisable(true);
 
-        // TextArea para simular la terminal
-        TextArea terminalOutput = new TextArea();
-        terminalOutput.setEditable(false); // No se puede editar
-        terminalOutput.setWrapText(true);  // Ajustar texto a la línea
-        terminalOutput.setPrefHeight(100); // Ajustar el tamaño del cuadro
+        terminalOutput = new TextArea();
+        terminalOutput.setEditable(false);
+        terminalOutput.setWrapText(true);
+        terminalOutput.setPrefHeight(100);
         terminalOutput.setStyle("-fx-control-inner-background: black; -fx-font-family: monospace; -fx-highlight-fill: white; -fx-highlight-text-fill: black; -fx-text-fill: white; -fx-border-color: gray; -fx-border-width: 2px; -fx-border-radius: 5px;");
 
         // Acción del botón de conexión
         connectButton.setOnAction(event -> {
-            // Obtener valores de los campos de texto
-            String ip = textFieldIP.getText();
-            String port = textFieldPort.getText();
-            String username = textFieldUsername.getText();
-            String password = passwordField.getText();
+            ip = textFieldIP.getText();
+            port = textFieldPort.getText();
+            username = textFieldUsername.getText();
+            password = passwordField.getText();
 
-            // Crear y mostrar el comando de conexión en el cuadro de terminal
             String command = "jdbc:mysql://" + ip + ":" + port;
             terminalOutput.appendText("Trying to connect to: " + command + "\n");
 
-            // Intentar conectar a la base de datos y mostrar el resultado en el cuadro de terminal
-            if (connectToDatabase(ip, port, username, password, terminalOutput)) {
+            if (connectToDatabase(ip, port, username, password)) {
                 terminalOutput.appendText("Conexión exitosa\n");
-                nextButton.setDisable(false); // Habilitar el botón "Siguiente" si la conexión es exitosa
+                nextButton.setDisable(false);
             } else {
                 terminalOutput.appendText("Error en la conexión\n");
             }
         });
 
-        // Disposición de los componentes de la interfaz en una cuadrícula
-        GridPane grid = new GridPane();
-        grid.setPadding(new Insets(10, 10, 10, 10)); // Espacio alrededor del grid
-        grid.setVgap(8);  // Espacio vertical entre componentes
-        grid.setHgap(10); // Espacio horizontal entre componentes
+        // Acción del botón "Siguiente"
+        nextButton.setOnAction(event -> {
+            primaryStage.setScene(databaseSelectionScene);
+            loadDatabases(); // Llamar a la función de carga de bases de datos al pasar a la siguiente escena
+        });
 
-        // Añadir componentes al grid
+        GridPane grid = new GridPane();
+        grid.setPadding(new Insets(10, 10, 10, 10));
+        grid.setVgap(8);
+        grid.setHgap(10);
+
         grid.add(labelIP, 0, 0);
         grid.add(textFieldIP, 1, 0);
         grid.add(labelPort, 0, 1);
@@ -88,39 +108,86 @@ public class FinalProject extends Application {
         grid.add(passwordField, 1, 3);
         grid.add(connectButton, 1, 4);
 
-        // Configuración del botón "Siguiente" en la esquina inferior derecha
         HBox bottomRightBox = new HBox(nextButton);
-        bottomRightBox.setAlignment(Pos.BOTTOM_RIGHT); // Alineación a la derecha
-        bottomRightBox.setPadding(new Insets(10)); // Espacio alrededor
+        bottomRightBox.setAlignment(Pos.BOTTOM_RIGHT);
+        bottomRightBox.setPadding(new Insets(10));
 
-        // Configuración de BorderPane para organizar la interfaz
         BorderPane layout = new BorderPane();
-        layout.setCenter(grid);               // Grid en el centro
-        layout.setBottom(terminalOutput);      // Terminal en la parte inferior
-        layout.setRight(bottomRightBox);       // Botón "Siguiente" en la parte inferior derecha
+        layout.setCenter(grid);
+        layout.setBottom(terminalOutput);
+        layout.setRight(bottomRightBox);
 
-        // Configurar la escena principal
-        Scene scene = new Scene(layout, 500, 400);
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        return new Scene(layout, 500, 400);
     }
 
-    // Método para la conexión a la base de datos
-    private boolean connectToDatabase(String ip, String port, String username, String password, TextArea terminalOutput) {
-        // Crear URL de conexión a MySQL
-        String url = "jdbc:mysql://" + ip + ":" + port ; // Se conecta a la base de datos "world"
+    private Scene createDatabaseSelectionScene() {
+        Label labelDatabases = new Label("Seleccionar Base de Datos:");
+        databaseComboBox = new ComboBox<>();
+
+        // Crear botones y sus eventos
+        Button previousButton = new Button("Anterior");
+        Button nextButton = new Button("Siguiente");
+        nextButton.setDisable(true); // Desactivar hasta que se seleccione una base de datos
+
+        // Evento para habilitar "Siguiente" al seleccionar una base de datos
+        databaseComboBox.setOnAction(event -> nextButton.setDisable(databaseComboBox.getValue() == null));
+
+        previousButton.setOnAction(event -> primaryStage.setScene(connectionScene));
+        nextButton.setOnAction(event -> {
+            String selectedDatabase = databaseComboBox.getValue();
+            if (selectedDatabase != null) {
+                terminalOutput.appendText("Base de datos seleccionada: " + selectedDatabase + "\n");
+                // Aquí puedes añadir lógica para la siguiente acción.
+            }
+        });
+
+        // Configuración de los botones en la parte inferior
+        HBox buttonBox = new HBox(10, previousButton, nextButton);
+        buttonBox.setAlignment(Pos.CENTER);
+        buttonBox.setPadding(new Insets(10));
+        buttonBox.setAlignment(Pos.CENTER);
+        HBox.setMargin(previousButton, new Insets(0, 0, 0, 0));
+        HBox.setMargin(nextButton, new Insets(0, 0, 0, 0));
+
+        // Distribuir botones "Anterior" y "Siguiente" a izquierda y derecha
+        BorderPane layout = new BorderPane();
+        layout.setCenter(new VBox(10, labelDatabases, databaseComboBox));
+        layout.setBottom(buttonBox);
+        
+        BorderPane.setAlignment(previousButton, Pos.BOTTOM_LEFT);
+        BorderPane.setAlignment(nextButton, Pos.BOTTOM_RIGHT);
+
+        return new Scene(layout, 400, 300);
+    }
+
+    private boolean connectToDatabase(String ip, String port, String username, String password) {
+        String url = "jdbc:mysql://" + ip + ":" + port;
         try (Connection conn = DriverManager.getConnection(url, username, password)) {
-            // Si la conexión es exitosa, mostrar mensaje en la terminal
             terminalOutput.appendText("Conexión exitosa a la base de datos.\n");
             return true;
         } catch (SQLException e) {
-            // Si ocurre un error, mostrar el mensaje de error en la terminal
             terminalOutput.appendText("Error en la conexión: " + e.getMessage() + "\n");
             return false;
         }
     }
 
+    private void loadDatabases() {
+        databaseComboBox.getItems().clear();
+
+        String url = "jdbc:mysql://" + ip + ":" + port;
+        try (Connection conn = DriverManager.getConnection(url, username, password);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SHOW DATABASES")) {
+
+            while (rs.next()) {
+                databaseComboBox.getItems().add(rs.getString(1));
+            }
+        } catch (SQLException e) {
+            terminalOutput.appendText("Error al cargar bases de datos: " + e.getMessage() + "\n");
+        }
+    }
+
     public static void main(String[] args) {
-        launch(args); // Iniciar la aplicación JavaFX
+        launch(args);
     }
 }
