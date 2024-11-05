@@ -16,13 +16,17 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import javafx.scene.Node;
 
 public class FinalProject extends Application {
 
     private Stage primaryStage;
     private Scene connectionScene;
     private Scene databaseSelectionScene;
+    private Scene tableSelectionScene;
     private ComboBox<String> databaseComboBox;
+    private VBox tablesVBox;
+    private Button nextTableButton;
     private TextArea terminalOutput;
 
     // Variables para almacenar los datos de conexión
@@ -39,6 +43,7 @@ public class FinalProject extends Application {
         // Crear las escenas
         connectionScene = createConnectionScene();
         databaseSelectionScene = createDatabaseSelectionScene();
+        tableSelectionScene = createTableSelectionScene(); // Nueva escena para selección de tablas
 
         // Mostrar la primera escena
         primaryStage.setScene(connectionScene);
@@ -137,7 +142,8 @@ public class FinalProject extends Application {
             String selectedDatabase = databaseComboBox.getValue();
             if (selectedDatabase != null) {
                 terminalOutput.appendText("Base de datos seleccionada: " + selectedDatabase + "\n");
-                // Aquí puedes añadir lógica para la siguiente acción.
+                loadTables(selectedDatabase); // Cargar las tablas de la base de datos seleccionada
+                primaryStage.setScene(tableSelectionScene);
             }
         });
 
@@ -145,17 +151,44 @@ public class FinalProject extends Application {
         HBox buttonBox = new HBox(10, previousButton, nextButton);
         buttonBox.setAlignment(Pos.CENTER);
         buttonBox.setPadding(new Insets(10));
-        buttonBox.setAlignment(Pos.CENTER);
-        HBox.setMargin(previousButton, new Insets(0, 0, 0, 0));
-        HBox.setMargin(nextButton, new Insets(0, 0, 0, 0));
 
-        // Distribuir botones "Anterior" y "Siguiente" a izquierda y derecha
         BorderPane layout = new BorderPane();
         layout.setCenter(new VBox(10, labelDatabases, databaseComboBox));
         layout.setBottom(buttonBox);
-        
-        BorderPane.setAlignment(previousButton, Pos.BOTTOM_LEFT);
-        BorderPane.setAlignment(nextButton, Pos.BOTTOM_RIGHT);
+
+        return new Scene(layout, 400, 300);
+    }
+
+    private Scene createTableSelectionScene() {
+        Label labelTables = new Label("Seleccionar hasta dos Tablas:");
+        tablesVBox = new VBox(10);
+        tablesVBox.setPadding(new Insets(10));
+
+        // Botones para navegación
+        Button previousButton = new Button("Anterior");
+        previousButton.setOnAction(event -> primaryStage.setScene(databaseSelectionScene));
+
+        nextTableButton = new Button("Siguiente");
+        nextTableButton.setDisable(true); // Desactivar hasta que se seleccionen tablas
+        nextTableButton.setOnAction(event -> {
+            terminalOutput.appendText("Tablas seleccionadas:\n");
+            for (Node checkbox : tablesVBox.getChildren().filtered(node -> node instanceof CheckBox)) {
+                CheckBox cb = (CheckBox) checkbox;
+                if (cb.isSelected()) {
+                    terminalOutput.appendText("- " + cb.getText() + "\n");
+                }
+            }
+            // Aquí puedes añadir lógica para la siguiente acción con las tablas seleccionadas.
+        });
+
+        // Configuración de los botones en la parte inferior
+        HBox buttonBox = new HBox(10, previousButton, nextTableButton);
+        buttonBox.setAlignment(Pos.CENTER);
+        buttonBox.setPadding(new Insets(10));
+
+        BorderPane layout = new BorderPane();
+        layout.setCenter(new VBox(10, labelTables, tablesVBox));
+        layout.setBottom(buttonBox);
 
         return new Scene(layout, 400, 300);
     }
@@ -184,6 +217,30 @@ public class FinalProject extends Application {
             }
         } catch (SQLException e) {
             terminalOutput.appendText("Error al cargar bases de datos: " + e.getMessage() + "\n");
+        }
+    }
+
+    private void loadTables(String databaseName) {
+        tablesVBox.getChildren().clear();
+        String url = "jdbc:mysql://" + ip + ":" + port + "/" + databaseName;
+
+        try (Connection conn = DriverManager.getConnection(url, username, password);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SHOW TABLES")) {
+
+            while (rs.next()) {
+                CheckBox checkBox = new CheckBox(rs.getString(1));
+                checkBox.setOnAction(event -> {
+                    long selectedCount = tablesVBox.getChildren().stream()
+                            .filter(node -> node instanceof CheckBox && ((CheckBox) node).isSelected())
+                            .count();
+                    nextTableButton.setDisable(selectedCount == 0 || selectedCount > 2);
+                });
+                tablesVBox.getChildren().add(checkBox);
+            }
+
+        } catch (SQLException e) {
+            terminalOutput.appendText("Error al cargar tablas: " + e.getMessage() + "\n");
         }
     }
 
