@@ -108,4 +108,16 @@ public class DatabaseManager {
             terminalOutput.appendText("Error al cerrar la conexión: " + e.getMessage() + "\n");
         }
     }
+
+    public void executeCustomQuery(String toString, TextArea terminalOutput) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    public ResultSet getFields(String table) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    public ResultSet getColumns(String table) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 }

@@ -2,6 +2,7 @@ package controllers;
 
 import finalproject.FinalProject;
 import modelo.DatabaseManager;
+import view.ColumnSelectionView;
 import view.TableSelectionView;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -10,6 +11,8 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.layout.VBox;
 
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Controlador para TableSelectionView.
@@ -39,29 +42,22 @@ public class TableSelectionController {
         loadTables(tablesBox, selectedDatabase);
 
         // Acción del botón "Anterior"
-        previousButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                FinalProject.showDatabaseSelectionScene();
-            }
-        });
+        previousButton.setOnAction(event -> FinalProject.showDatabaseSelectionScene());
 
         // Acción del botón "Siguiente"
-        nextTableButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                StringBuilder selectedTables = new StringBuilder("Tablas seleccionadas:\n");
-                for (javafx.scene.Node node : tablesBox.getChildren()) {
-                    if (node instanceof CheckBox) {
-                        CheckBox cb = (CheckBox) node;
-                        if (cb.isSelected()) {
-                            selectedTables.append("- ").append(cb.getText()).append("\n");
-                        }
+        nextTableButton.setOnAction(event -> {
+            List<String> selectedTables = new ArrayList<>();
+            for (javafx.scene.Node node : tablesBox.getChildren()) {
+                if (node instanceof CheckBox) {
+                    CheckBox cb = (CheckBox) node;
+                    if (cb.isSelected()) {
+                        selectedTables.add(cb.getText());
                     }
                 }
-                view.getTerminalOutput().appendText(selectedTables.toString());
-                // Aquí puedes añadir lógica adicional para manejar las tablas seleccionadas.
             }
+
+            // Enviar tablas seleccionadas para la siguiente vista
+            FinalProject.showColumnSelectionScene(selectedTables.toArray(new String[0]));
         });
     }
 
@@ -80,14 +76,11 @@ public class TableSelectionController {
                 while (rs.next()) {
                     String tableName = rs.getString(1);
                     CheckBox checkBox = new CheckBox(tableName);
-                    checkBox.setOnAction(new EventHandler<ActionEvent>() {
-                        @Override
-                        public void handle(ActionEvent event) {
-                            long selectedCount = tablesBox.getChildren().stream()
-                                    .filter(node -> node instanceof CheckBox && ((CheckBox) node).isSelected())
-                                    .count();
-                            view.getNextTableButton().setDisable(selectedCount == 0 || selectedCount > 2);
-                        }
+                    checkBox.setOnAction(event -> {
+                        long selectedCount = tablesBox.getChildren().stream()
+                                .filter(node -> node instanceof CheckBox && ((CheckBox) node).isSelected())
+                                .count();
+                        view.getNextTableButton().setDisable(selectedCount == 0 || selectedCount > 2);
                     });
                     tablesBox.getChildren().add(checkBox);
                 }
