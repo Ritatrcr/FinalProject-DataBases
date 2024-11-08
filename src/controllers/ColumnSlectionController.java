@@ -1,10 +1,14 @@
 package controllers;
 
 import finalproject.FinalProject;
+import view.QueryPreviewView;
 import modelo.DatabaseManager;
 import view.ColumnSelectionView;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class ColumnSlectionController {
     private ColumnSelectionView view;
@@ -32,6 +36,19 @@ public class ColumnSlectionController {
             @Override
             public void handle(ActionEvent event) {
                 // Obtener las columnas seleccionadas y sus alias
+                Map<String, Map<String, String>> selectedColumnsWithAliases = view.getSelectedColumnsWithAliases();
+                
+                // Construir el query preview
+                String queryPreview = view.updateQueryPreview();
+
+                // Crear lista de tablas seleccionadas
+                List<String> selectedTablesList = new ArrayList<>();
+                for (String table : selectedTables) {
+                    selectedTablesList.add(table);
+                }
+
+                // Mostrar la nueva vista con tablas seleccionadas y query
+                FinalProject.showQueryPreviewScene(selectedTablesList, queryPreview);
             }
         });
     }

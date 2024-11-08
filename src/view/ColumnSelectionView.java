@@ -172,29 +172,39 @@ public class ColumnSelectionView {
     /**
  * Actualiza el preview del query en la terminal.
  */
-private void updateQueryPreview() {
+    public String updateQueryPreview() {
     StringBuilder queryBuilder = new StringBuilder("SELECT ");
     boolean first = true;
 
+    // Recorre las tablas y columnas seleccionadas con sus alias
     for (Map.Entry<String, Map<String, String>> tableEntry : selectedColumnsWithAliases.entrySet()) {
-        String tableName = tableEntry.getKey(); // Nombre de la tabla
-        for (Map.Entry<String, String> columnEntry : tableEntry.getValue().entrySet()) {
+        String tableName = tableEntry.getKey();
+        Map<String, String> columns = tableEntry.getValue();
+
+        for (Map.Entry<String, String> columnEntry : columns.entrySet()) {
             if (!first) {
                 queryBuilder.append(", ");
             }
-            queryBuilder.append(tableName).append(".").append(columnEntry.getKey()); // tabla.columna
+            queryBuilder.append(tableName).append(".").append(columnEntry.getKey());
             if (!columnEntry.getValue().isEmpty()) {
-                queryBuilder.append(" AS ").append(columnEntry.getValue()); // Alias si se asignó
+                queryBuilder.append(" AS ").append(columnEntry.getValue());
             }
             first = false;
         }
     }
 
-    if (queryBuilder.length() == 7) { // No se ha seleccionado ninguna columna
-        queryPreviewTerminal.setText("");
-    } else {
-        queryPreviewTerminal.setText(queryBuilder.toString());
+    // Agrega la cláusula FROM
+    if (!selectedColumnsWithAliases.isEmpty()) {
+        String mainTable = selectedColumnsWithAliases.keySet().iterator().next();
+        queryBuilder.append(" FROM ").append(mainTable);
     }
+
+    // Establece el texto en la terminal y devuelve el query
+    String queryPreview = queryBuilder.toString();
+    queryPreviewTerminal.setText(queryPreview);
+    return queryPreview;
 }
+
+
 
 }

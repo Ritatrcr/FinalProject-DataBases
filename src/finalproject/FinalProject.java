@@ -2,6 +2,7 @@ package finalproject;
 
 import controllers.ColumnSlectionController;
 import controllers.ConnectionController;
+import controllers.QueryPreviewViewController;
 import controllers.SelectDatabaseController;
 import controllers.TableSelectionController;
 import modelo.DatabaseManager;
@@ -14,6 +15,8 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.util.List;
+import java.util.Map;
+import view.QueryPreviewView;
 
 public class FinalProject extends Application {
 
@@ -74,7 +77,14 @@ public class FinalProject extends Application {
     public static String getSelectedDatabase() {
         return selectedDatabase;
     }
-    
+
+    public static void showQueryPreviewScene(List<String> selectedTables, String queryPreview) {
+    QueryPreviewView view = new QueryPreviewView(selectedTables, queryPreview);
+    QueryPreviewViewController controller = new QueryPreviewViewController(view, selectedTables, queryPreview);
+    Scene scene = new Scene(view.getLayout(), 900, 700);
+    primaryStage.setScene(scene);
+}
+
 
     @Override
     public void stop() throws Exception {
@@ -84,7 +94,6 @@ public class FinalProject extends Application {
         }
     }
 
-    
     public static void main(String[] args) {
         launch(args);
     }
