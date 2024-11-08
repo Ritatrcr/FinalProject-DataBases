@@ -11,6 +11,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 /**
  * Singleton para manejar la conexión a la base de datos.
@@ -120,4 +122,35 @@ public class DatabaseManager {
     public ResultSet getColumns(String table) {
         throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
+    
+    
+    public ResultSet getColumnsDetails(String tableName) throws SQLException {
+    String query = "SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_KEY, COLUMN_DEFAULT, EXTRA " +
+                   "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" + tableName + "'";
+    Statement stmt = connection.createStatement();
+    return stmt.executeQuery(query);
+    }
+    
+    public ObservableList<ColumnDetails> getColumnsDetailsAsObservableList(String tableName) {
+        ObservableList<ColumnDetails> columnsData = FXCollections.observableArrayList();
+        String query = "SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_KEY, COLUMN_DEFAULT, EXTRA " +
+                       "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" + tableName + "'";
+
+        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
+            while (rs.next()) {
+                String field = rs.getString("COLUMN_NAME");
+                String type = rs.getString("COLUMN_TYPE");
+                String nullable = rs.getString("IS_NULLABLE");
+                String key = rs.getString("COLUMN_KEY");
+                String defaultValue = rs.getString("COLUMN_DEFAULT");
+                String extra = rs.getString("EXTRA");
+
+                columnsData.add(new ColumnDetails(field, type, nullable, key, defaultValue, extra));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return columnsData;
+    }
+
 }

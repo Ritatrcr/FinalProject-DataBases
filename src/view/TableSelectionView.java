@@ -5,6 +5,7 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -18,6 +19,7 @@ public class TableSelectionView {
     private Button previousButton;
     private Button nextTableButton;
     private TextArea terminalOutput;
+    private ScrollPane scrollPane;
     private VBox tablesBox;
     private Label instructionLabel;
 
@@ -28,7 +30,7 @@ public class TableSelectionView {
         // Parte superior: Instrucción clara y visible
         instructionLabel = new Label("Seleccione 1 o 2 tablas por medio del checkbox:");
         instructionLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-        instructionLabel.setWrapText(true); // Permite que el texto se ajuste a múltiples líneas si es necesario
+        instructionLabel.setWrapText(true);
         HBox topBox = new HBox(instructionLabel);
         topBox.setAlignment(Pos.CENTER_LEFT);
         topBox.setPadding(new Insets(10, 0, 20, 0));
@@ -38,8 +40,14 @@ public class TableSelectionView {
         tablesBox = new VBox(10);
         tablesBox.setAlignment(Pos.TOP_LEFT);
         tablesBox.setPadding(new Insets(10));
+        tablesBox.setPrefWidth(200); // Ancho reducido para el VBox de CheckBoxes
 
-        layout.setCenter(tablesBox);
+        scrollPane = new ScrollPane(tablesBox);
+        scrollPane.setFitToWidth(false); // No expande a todo el ancho
+        scrollPane.setPrefViewportHeight(200); // Ajusta la altura visible del ScrollPane
+        scrollPane.setPrefWidth(220); // Ancho ajustado del ScrollPane, ligeramente más grande que el VBox
+        scrollPane.setStyle("-fx-border-color: gray; -fx-border-width: 2px;");
+        layout.setCenter(scrollPane);
 
         // Parte inferior: TextArea para terminal
         terminalOutput = new TextArea();
@@ -58,7 +66,7 @@ public class TableSelectionView {
         nextTableButton.setDisable(true); // Inicialmente deshabilitado
 
         HBox bottomBox = new HBox(10, previousButton, nextTableButton);
-        bottomBox.setAlignment(Pos.CENTER_RIGHT); // Alinea los botones a la derecha
+        bottomBox.setAlignment(Pos.CENTER_RIGHT);
         bottomBox.setPadding(new Insets(10));
         layout.setBottom(bottomBox);
     }

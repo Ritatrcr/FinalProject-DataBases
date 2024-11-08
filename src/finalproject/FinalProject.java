@@ -35,7 +35,7 @@ public class FinalProject extends Application {
         ConnectionView view = new ConnectionView();
         ConnectionController controller = new ConnectionController(view);
         controller.setup();
-        Scene scene = new Scene(view.getLayout(), 500, 400);
+        Scene scene = new Scene(view.getLayout(), 900, 700);
         primaryStage.setScene(scene);
     }
 
@@ -43,7 +43,7 @@ public class FinalProject extends Application {
         DatabaseSelectionView view = new DatabaseSelectionView();
         SelectDatabaseController controller = new SelectDatabaseController(view);
         controller.setup();
-        Scene scene = new Scene(view.getLayout(), 400, 300);
+        Scene scene = new Scene(view.getLayout(), 900, 700);
         primaryStage.setScene(scene);
     }
 
@@ -51,7 +51,7 @@ public class FinalProject extends Application {
         TableSelectionView view = new TableSelectionView();
         TableSelectionController controller = new TableSelectionController(view);
         controller.setup();
-        Scene scene = new Scene(view.getLayout(), 400, 300);
+        Scene scene = new Scene(view.getLayout(), 900, 700);
         primaryStage.setScene(scene);
     }
 
@@ -63,7 +63,7 @@ public class FinalProject extends Application {
         ColumnSelectionView view = new ColumnSelectionView();
         ColumnSlectionController controller = new ColumnSlectionController(view);
         controller.setup(selectedTables);
-        Scene scene = new Scene(view.getLayout(), 500, 400);
+        Scene scene = new Scene(view.getLayout(), 900, 700);
         primaryStage.setScene(scene);
     }
 
@@ -74,6 +74,7 @@ public class FinalProject extends Application {
     public static String getSelectedDatabase() {
         return selectedDatabase;
     }
+    
 
     @Override
     public void stop() throws Exception {
@@ -83,6 +84,7 @@ public class FinalProject extends Application {
         }
     }
 
+    
     public static void main(String[] args) {
         launch(args);
     }
