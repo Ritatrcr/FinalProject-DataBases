@@ -1,27 +1,18 @@
 package finalproject;
 
-import controllers.ColumnSlectionController;
 import controllers.ConnectionController;
-import controllers.QueryPreviewViewController;
-import controllers.SelectDatabaseController;
-import controllers.TableSelectionController;
+import controllers.DashboardController;
 import modelo.DatabaseManager;
-import view.ColumnSelectionView;
 import view.ConnectionView;
-import view.DatabaseSelectionView;
-import view.TableSelectionView;
+import view.DashboardView;
+
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import java.util.List;
-import java.util.Map;
-import view.QueryPreviewView;
-
 public class FinalProject extends Application {
 
-    private static Stage primaryStage;
-    private static String selectedDatabase;
+    private static Stage primaryStage; // Ventana principal
 
     @Override
     public void start(Stage stage) {
@@ -34,56 +25,35 @@ public class FinalProject extends Application {
         primaryStage.show();
     }
 
+    /**
+     * Muestra la escena de conexión a la base de datos.
+     */
     public static void showConnectionScene() {
-        ConnectionView view = new ConnectionView();
-        ConnectionController controller = new ConnectionController(view);
-        controller.setup();
-        Scene scene = new Scene(view.getLayout(), 900, 700);
-        primaryStage.setScene(scene);
-    }
+        ConnectionView connectionView = new ConnectionView();
+        ConnectionController connectionController = new ConnectionController(connectionView);
+        connectionController.setup();
 
-    public static void showDatabaseSelectionScene() {
-        DatabaseSelectionView view = new DatabaseSelectionView();
-        SelectDatabaseController controller = new SelectDatabaseController(view);
-        controller.setup();
-        Scene scene = new Scene(view.getLayout(), 900, 700);
-        primaryStage.setScene(scene);
-    }
-
-    public static void showTableSelectionScene() {
-        TableSelectionView view = new TableSelectionView();
-        TableSelectionController controller = new TableSelectionController(view);
-        controller.setup();
-        Scene scene = new Scene(view.getLayout(), 900, 700);
-        primaryStage.setScene(scene);
+        Scene connectionScene = new Scene(connectionView.getLayout(), 900, 700);
+        primaryStage.setScene(connectionScene);
     }
 
     /**
-     * Muestra la escena de selección de columnas después de que se han seleccionado las tablas.
-     * @param selectedTables Arreglo de nombres de tablas seleccionadas.
+     * Muestra el dashboard después de establecer la conexión a la base de datos.
+     *
+     * @param dbManager Instancia de DatabaseManager
+     * @param databaseName Nombre de la base de datos seleccionada
      */
-    public static void showColumnSelectionScene(String[] selectedTables) {
-        ColumnSelectionView view = new ColumnSelectionView();
-        ColumnSlectionController controller = new ColumnSlectionController(view);
-        controller.setup(selectedTables);
-        Scene scene = new Scene(view.getLayout(), 900, 700);
-        primaryStage.setScene(scene);
-    }
+ public static void showDashboardScene(DatabaseManager dbManager) {
+    DashboardView dashboardView = new DashboardView();
+    DashboardController dashboardController = new DashboardController(dashboardView, dbManager);
+    dashboardController.setup();
 
-    public static void setSelectedDatabase(String database) {
-        selectedDatabase = database;
-    }
-
-    public static String getSelectedDatabase() {
-        return selectedDatabase;
-    }
-
-    public static void showQueryPreviewScene(List<String> selectedTables, String queryPreview) {
-    QueryPreviewView view = new QueryPreviewView(selectedTables, queryPreview);
-    QueryPreviewViewController controller = new QueryPreviewViewController(view, selectedTables, queryPreview);
-    Scene scene = new Scene(view.getLayout(), 900, 700);
-    primaryStage.setScene(scene);
+    // Crear la escena con el ScrollPane de la vista
+    Scene dashboardScene = new Scene(dashboardView.getScrollPane(), 900, 700);
+    primaryStage.setScene(dashboardScene); // Cambiar la escena
+    primaryStage.setTitle("Dashboard de Gestión de Base de Datos"); // Opcional: Cambiar título
 }
+
 
 
     @Override
