@@ -32,7 +32,7 @@ public class DashboardController {
      */
     public void setup() {
         // Configura eventos
-        view.getLoadDatabaseButton().setOnAction(this::loadTables);
+        view.getDatabaseSelector().setOnAction(event -> loadTables());
         view.getLoadTableButton().setOnAction(this::loadTableData);
         view.getAddButton().setOnAction(this::addRecord);
         view.getDeleteButton().setOnAction(this::deleteRecord);
@@ -56,10 +56,8 @@ public class DashboardController {
 
     /**
      * Carga las tablas de la base de datos seleccionada.
-     *
-     * @param event Evento de clic del botón "Cargar Tablas".
      */
-    private void loadTables(ActionEvent event) {
+    private void loadTables() {
         String selectedDatabase = view.getDatabaseSelector().getValue();
         if (selectedDatabase == null || selectedDatabase.isEmpty()) {
             showAlert("Error", "Por favor, selecciona una base de datos.");
@@ -125,91 +123,8 @@ public class DashboardController {
             showAlert("Error", "Error cargando datos de la tabla: " + e.getMessage());
         }
     }
-
-    /**
-     * Añade un nuevo registro a la tabla seleccionada.
-     */
-    private void addRecord(ActionEvent event) {
-        List<String> inputValues = view.getInputValues();
-
-        // Verifica si algún campo está vacío
-        if (inputValues.stream().anyMatch(String::isEmpty)) {
-            showAlert("Error", "Todos los campos son obligatorios.");
-            return;
-        }
-
-        String selectedTable = view.getTableSelector().getValue();
-        if (selectedTable == null || selectedTable.isEmpty()) {
-            showAlert("Error", "Por favor, selecciona una tabla.");
-            return;
-        }
-
-        // Construir e insertar el registro
-        String query = "INSERT INTO " + selectedTable + " VALUES (" +
-                inputValues.stream().map(value -> "'" + value + "'").reduce((a, b) -> a + ", " + b).orElse("") + ")";
-        if (dbManager.executeUpdate(query)) {
-            showAlert("Éxito", "Registro añadido correctamente.");
-            view.getLoadTableButton().fire(); // Recargar los datos de la tabla
-        } else {
-            showAlert("Error", "No se pudo añadir el registro.");
-        }
-    }
-
-    /**
-     * Elimina un registro seleccionado de la tabla.
-     */
-    private void deleteRecord(ActionEvent event) {
-        String selectedTable = view.getTableSelector().getValue();
-        ObservableList<String> selectedRow = view.getTableView().getSelectionModel().getSelectedItem();
-        if (selectedTable == null || selectedRow == null) {
-            showAlert("Error", "Por favor, selecciona una tabla y un registro para eliminar.");
-            return;
-        }
-
-        // Suponemos que la primera columna es la clave primaria
-        String primaryKeyValue = selectedRow.get(0);
-        String query = "DELETE FROM " + selectedTable + " WHERE id = '" + primaryKeyValue + "'";
-        if (dbManager.executeUpdate(query)) {
-            showAlert("Éxito", "Registro eliminado correctamente.");
-            view.getLoadTableButton().fire(); // Recargar los datos de la tabla
-        } else {
-            showAlert("Error", "No se pudo eliminar el registro.");
-        }
-    }
-
-    /**
-     * Actualiza un registro seleccionado en la tabla.
-     */
-    private void updateRecord(ActionEvent event) {
-        String selectedTable = view.getTableSelector().getValue();
-        ObservableList<String> selectedRow = view.getTableView().getSelectionModel().getSelectedItem();
-        if (selectedTable == null || selectedRow == null) {
-            showAlert("Error", "Por favor, selecciona una tabla y un registro para actualizar.");
-            return;
-        }
-
-        // Mostrar un cuadro de diálogo para ingresar los nuevos valores
-        List<String> inputValues = view.getInputValues();
-        if (inputValues.stream().anyMatch(String::isEmpty)) {
-            showAlert("Error", "Todos los campos son obligatorios.");
-            return;
-        }
-
-        // Construir consulta de actualización
-        String query = "UPDATE " + selectedTable + " SET " +
-                inputValues.stream()
-                        .map(value -> "column_name='" + value + "'") // Ajusta para asignar los valores a columnas específicas
-                        .reduce((a, b) -> a + ", " + b)
-                        .orElse("") +
-                " WHERE id = '" + selectedRow.get(0) + "'"; // Clave primaria asumida en la primera columna
-        if (dbManager.executeUpdate(query)) {
-            showAlert("Éxito", "Registro actualizado correctamente.");
-            view.getLoadTableButton().fire(); // Recargar los datos de la tabla
-        } else {
-            showAlert("Error", "No se pudo actualizar el registro.");
-        }
-    }
-
+    
+    
     /**
      * Muestra un cuadro de diálogo de alerta con un mensaje.
      */
@@ -220,4 +135,180 @@ public class DashboardController {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
+    private void addRecord(ActionEvent event) {
+    String selectedDatabase = view.getDatabaseSelector().getValue();
+    String selectedTable = view.getTableSelector().getValue();
+
+    // Validar selección de base de datos y tabla
+    if (selectedDatabase == null || selectedDatabase.isEmpty()) {
+        showAlert("Error", "Por favor, selecciona una base de datos.");
+        return;
+    }
+
+    if (selectedTable == null || selectedTable.isEmpty()) {
+        showAlert("Error", "Por favor, selecciona una tabla.");
+        return;
+    }
+
+    // Obtener los valores de los campos de entrada
+    List<String> inputValues = view.getInputValues();
+
+    // Validar que no haya campos vacíos
+    if (inputValues.contains("") || inputValues.contains(null)) {
+        showAlert("Error", "Por favor, completa todos los campos antes de añadir.");
+        return;
+    }
+
+    // Obtener los nombres de las columnas
+    List<String> columnNames = dbManager.getColumnNames(selectedDatabase, selectedTable);
+
+    if (columnNames.size() != inputValues.size()) {
+        showAlert("Error", "El número de columnas no coincide con el número de valores proporcionados.");
+        return;
+    }
+
+    // Llamar al método del DatabaseManager para insertar el registro
+    if (dbManager.insertRecord(selectedDatabase, selectedTable, columnNames, inputValues)) {
+        showAlert("Éxito", "Registro añadido correctamente.");
+        loadTableData(null); // Recargar datos de la tabla para reflejar el cambio
+    } else {
+        showAlert("Error", "No se pudo añadir el registro. Revisa los datos e inténtalo de nuevo.");
+    }
+}
+    
+    
+
+
+
+    private void deleteRecord(ActionEvent event) {
+    String selectedDatabase = view.getDatabaseSelector().getValue();
+    String selectedTable = view.getTableSelector().getValue();
+
+    // Validar selección de base de datos y tabla
+    if (selectedDatabase == null || selectedDatabase.isEmpty()) {
+        showAlert("Error", "Por favor, selecciona una base de datos.");
+        return;
+    }
+
+    if (selectedTable == null || selectedTable.isEmpty()) {
+        showAlert("Error", "Por favor, selecciona una tabla.");
+        return;
+    }
+
+    // Obtener la fila seleccionada en el TableView
+    ObservableList<String> selectedRow = view.getTableView().getSelectionModel().getSelectedItem();
+
+    if (selectedRow == null) {
+        showAlert("Error", "Por favor, selecciona un registro para eliminar.");
+        return;
+    }
+
+    // Obtener los nombres de las columnas y los valores de la fila seleccionada
+    List<String> columnNames = dbManager.getColumnNames(selectedDatabase, selectedTable);
+
+    // Construir una cláusula WHERE para identificar el registro
+    StringBuilder whereClause = new StringBuilder();
+    for (int i = 0; i < columnNames.size(); i++) {
+        String columnName = columnNames.get(i);
+        String value = selectedRow.get(i);
+
+        // Manejar valores NULL
+        if (value == null || value.trim().isEmpty()) {
+            whereClause.append(columnName).append(" IS NULL AND ");
+        } else {
+            whereClause.append(columnName).append(" = '").append(value.replace("'", "''")).append("' AND ");
+        }
+    }
+
+    // Eliminar el último " AND "
+    String finalWhereClause = whereClause.substring(0, whereClause.length() - 5);
+
+    // Construir y ejecutar el comando SQL DELETE
+    String sql = "DELETE FROM " + selectedDatabase + "." + selectedTable + " WHERE " + finalWhereClause;
+
+    if (dbManager.executeUpdate(sql)) {
+        showAlert("Éxito", "Registro eliminado correctamente.");
+        loadTableData(null); // Recargar los datos de la tabla para reflejar el cambio
+    } else {
+        showAlert("Error", "No se pudo eliminar el registro. Revisa los datos e inténtalo de nuevo.");
+    }
+}
+
+
+    private void updateRecord(ActionEvent event) {
+    String selectedDatabase = view.getDatabaseSelector().getValue();
+    String selectedTable = view.getTableSelector().getValue();
+
+    // Validar selección de base de datos y tabla
+    if (selectedDatabase == null || selectedDatabase.isEmpty()) {
+        showAlert("Error", "Por favor, selecciona una base de datos.");
+        return;
+    }
+
+    if (selectedTable == null || selectedTable.isEmpty()) {
+        showAlert("Error", "Por favor, selecciona una tabla.");
+        return;
+    }
+
+    // Obtener la fila seleccionada en el TableView
+    ObservableList<String> selectedRow = view.getTableView().getSelectionModel().getSelectedItem();
+
+    if (selectedRow == null) {
+        showAlert("Error", "Por favor, selecciona un registro para actualizar.");
+        return;
+    }
+
+    // Obtener los nombres de las columnas y los valores nuevos de los inputs
+    List<String> columnNames = dbManager.getColumnNames(selectedDatabase, selectedTable);
+    List<String> inputValues = view.getInputValues();
+
+    if (inputValues.size() != columnNames.size()) {
+        showAlert("Error", "El número de columnas no coincide con los valores proporcionados.");
+        return;
+    }
+
+    // Construir la cláusula SET con los nuevos valores
+    StringBuilder setClause = new StringBuilder();
+    for (int i = 0; i < columnNames.size(); i++) {
+        String columnName = columnNames.get(i);
+        String value = inputValues.get(i);
+
+        if (value == null || value.trim().isEmpty()) {
+            setClause.append(columnName).append(" = NULL, ");
+        } else {
+            setClause.append(columnName).append(" = '").append(value.replace("'", "''")).append("', ");
+        }
+    }
+
+    // Eliminar la última coma y espacio extra
+    String finalSetClause = setClause.substring(0, setClause.length() - 2);
+
+    // Construir la cláusula WHERE para identificar el registro
+    StringBuilder whereClause = new StringBuilder();
+    for (int i = 0; i < columnNames.size(); i++) {
+        String columnName = columnNames.get(i);
+        String value = selectedRow.get(i);
+
+        if (value == null || value.trim().isEmpty()) {
+            whereClause.append(columnName).append(" IS NULL AND ");
+        } else {
+            whereClause.append(columnName).append(" = '").append(value.replace("'", "''")).append("' AND ");
+        }
+    }
+
+    // Eliminar el último " AND "
+    String finalWhereClause = whereClause.substring(0, whereClause.length() - 5);
+
+    // Construir y ejecutar el comando SQL UPDATE
+    String sql = "UPDATE " + selectedDatabase + "." + selectedTable + " SET " + finalSetClause + " WHERE " + finalWhereClause;
+
+    if (dbManager.executeUpdate(sql)) {
+        showAlert("Éxito", "Registro actualizado correctamente.");
+        loadTableData(null); // Recargar los datos de la tabla para reflejar los cambios
+    } else {
+        showAlert("Error", "No se pudo actualizar el registro. Revisa los datos e inténtalo de nuevo.");
+    }
+}
+
 }

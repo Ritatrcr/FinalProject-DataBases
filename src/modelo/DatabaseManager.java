@@ -141,6 +141,72 @@ public class DatabaseManager {
             return false;
         }
     }
+    
+    /**
+ * Inserta un nuevo registro en la tabla especificada.
+ *
+ * @param databaseName Nombre de la base de datos.
+ * @param tableName Nombre de la tabla.
+ * @param columnNames Lista con los nombres de las columnas.
+ * @param values Lista con los valores correspondientes a las columnas.
+ * @return true si la inserción fue exitosa, false en caso contrario.
+ */
+public boolean insertRecord(String databaseName, String tableName, List<String> columnNames, List<String> values) {
+    // Validar que los parámetros no estén vacíos
+    if (columnNames.isEmpty() || values.isEmpty() || columnNames.size() != values.size()) {
+        terminalOutput.appendText("Error: Número de columnas y valores no coincide.\n");
+        return false;
+    }
+
+    // Construir el comando SQL
+    String columns = String.join(", ", columnNames);
+    StringBuilder valuesBuilder = new StringBuilder();
+
+    // Construir la lista de valores, reemplazando valores vacíos por NULL
+    for (String value : values) {
+        if (value == null || value.trim().isEmpty()) {
+            valuesBuilder.append("NULL");
+        } else {
+            valuesBuilder.append("'").append(value.replace("'", "''")).append("'"); // Escapar comillas simples
+        }
+        valuesBuilder.append(", ");
+    }
+
+    // Eliminar la última coma y espacio extra
+    String valuesPlaceholder = valuesBuilder.substring(0, valuesBuilder.length() - 2);
+
+    String sql = "INSERT INTO " + databaseName + "." + tableName + " (" + columns + ") VALUES (" + valuesPlaceholder + ")";
+
+    // Ejecutar el comando SQL
+    try (Statement stmt = connection.createStatement()) {
+        stmt.executeUpdate(sql);
+        terminalOutput.appendText("Registro insertado exitosamente en " + tableName + ".\n");
+        return true;
+    } catch (SQLException e) {
+        terminalOutput.appendText("Error insertando registro: " + e.getMessage() + "\n");
+        return false;
+    }
+}
+public List<String> getMandatoryFields(String databaseName, String tableName) {
+    List<String> mandatoryFields = new ArrayList<>();
+    String query = "SELECT COLUMN_NAME, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS " +
+                   "WHERE TABLE_SCHEMA = '" + databaseName + "' AND TABLE_NAME = '" + tableName + "'";
+
+    try (Statement stmt = connection.createStatement();
+         ResultSet rs = stmt.executeQuery(query)) {
+        while (rs.next()) {
+            String columnName = rs.getString("COLUMN_NAME");
+            String isNullable = rs.getString("IS_NULLABLE");
+            if ("NO".equalsIgnoreCase(isNullable)) { // Campo obligatorio
+                mandatoryFields.add(columnName);
+            }
+        }
+    } catch (SQLException e) {
+        terminalOutput.appendText("Error obteniendo campos obligatorios: " + e.getMessage() + "\n");
+    }
+
+    return mandatoryFields;
+}
 
     /**
      * Cierra la conexión a la base de datos.

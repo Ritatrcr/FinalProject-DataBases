@@ -5,7 +5,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -22,7 +21,6 @@ public class DashboardView {
     private ComboBox<String> tableSelector;    // ComboBox para seleccionar tabla
     private TableView<ObservableList<String>> tableView; // Tabla para mostrar datos
     private Button addButton, deleteButton, updateButton, loadTableButton; // Botones para operaciones CRUD
-    private Button loadDatabaseButton; // Botón para cargar las tablas de la base de datos seleccionada
     private VBox inputFieldsArea; // Área dinámica para los campos de entrada
     private List<TextField> inputFields; // Lista de campos dinámicos de entrada
 
@@ -70,9 +68,6 @@ public class DashboardView {
         databaseSelector.setPromptText("Selecciona una base de datos");
         databaseSelector.setPrefWidth(200);
 
-        // Botón para cargar tablas
-        loadDatabaseButton = new Button("Cargar Tablas");
-
         // Selector de tablas
         Label tableLabel = new Label("Tabla:");
         tableSelector = new ComboBox<>();
@@ -83,7 +78,7 @@ public class DashboardView {
         loadTableButton = new Button("Cargar Datos");
 
         // Añadir componentes al contenedor
-        topBox.getChildren().addAll(databaseLabel, databaseSelector, loadDatabaseButton, tableLabel, tableSelector, loadTableButton);
+        topBox.getChildren().addAll(databaseLabel, databaseSelector, tableLabel, tableSelector, loadTableButton);
 
         return topBox;
     }
@@ -146,23 +141,21 @@ public class DashboardView {
         inputFieldsArea.getChildren().clear(); // Limpia el área dinámica
         inputFields.clear(); // Limpia la lista de campos existentes
 
-        // Genera un campo de texto para cada columna en formato fila
+        // Genera un campo de texto para cada columna en formato fila sin etiquetas
+        HBox row = new HBox(10);
+        row.setAlignment(Pos.CENTER_LEFT);
+
         for (String columnName : columnNames) {
-            HBox row = new HBox(10); // Cada fila tiene un Label y un TextField
-            row.setAlignment(Pos.CENTER_LEFT);
-
-            Label label = new Label(columnName + ":");
             TextField textField = new TextField();
-            textField.setPromptText("Ingrese " + columnName);
-            textField.setPrefWidth(200);
-
-            // Añadir el Label y TextField a la fila
-            row.getChildren().addAll(label, textField);
-            inputFieldsArea.getChildren().add(row);
+            textField.setPromptText(columnName); // Utiliza el nombre de la columna como placeholder
+            textField.setPrefWidth(150);
+            row.getChildren().add(textField);
 
             // Añadir el campo a la lista
             inputFields.add(textField);
         }
+
+        inputFieldsArea.getChildren().add(row);
     }
 
     /**
@@ -192,10 +185,6 @@ public class DashboardView {
         return databaseSelector;
     }
 
-    public Button getLoadDatabaseButton() {
-        return loadDatabaseButton;
-    }
-
     public ComboBox<String> getTableSelector() {
         return tableSelector;
     }
@@ -218,5 +207,9 @@ public class DashboardView {
 
     public Button getUpdateButton() {
         return updateButton;
+    }
+
+    public Object getViewTableInfoButton() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }
