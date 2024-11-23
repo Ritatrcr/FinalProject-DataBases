@@ -16,11 +16,11 @@ import java.util.List;
  */
 public class DashboardView {
     private ScrollPane scrollPane; // ScrollPane para habilitar desplazamiento
-    private BorderPane layout;
+    private BorderPane layout; // Layout principal
     private ComboBox<String> databaseSelector; // ComboBox para seleccionar base de datos
-    private ComboBox<String> tableSelector;    // ComboBox para seleccionar tabla
+    private ComboBox<String> tableSelector; // ComboBox para seleccionar tabla
     private TableView<ObservableList<String>> tableView; // Tabla para mostrar datos
-    private Button addButton, deleteButton, updateButton, loadTableButton; // Botones para operaciones CRUD
+    private Button addButton, deleteButton, updateButton, loadTableButton, goBackButton; // Botones CRUD y "Volver"
     private VBox inputFieldsArea; // Área dinámica para los campos de entrada
     private List<TextField> inputFields; // Lista de campos dinámicos de entrada
 
@@ -37,8 +37,8 @@ public class DashboardView {
         // Contenedor de inputs dinámicos
         VBox centerBox = createCenterSection();
 
-        // Contenedor inferior: Botones CRUD
-        VBox bottomBox = createBottomSection();
+        // Contenedor inferior: Botones CRUD y botón "Volver"
+        BorderPane bottomBox = createBottomSection();
 
         // Configurar layout principal
         layout.setTop(topBox);
@@ -51,7 +51,7 @@ public class DashboardView {
         scrollPane.setFitToWidth(true); // Ajustar al ancho de la ventana
         scrollPane.setFitToHeight(true); // Ajustar al alto de la ventana
     }
-
+  
     /**
      * Crea la sección superior con ComboBoxes para seleccionar base de datos y tabla.
      *
@@ -110,24 +110,30 @@ public class DashboardView {
     }
 
     /**
-     * Crea la sección inferior con botones para operaciones CRUD.
+     * Crea la sección inferior con botones para operaciones CRUD y el botón "Volver".
      *
-     * @return VBox con los botones CRUD.
+     * @return BorderPane con los botones CRUD y "Volver".
      */
-    private VBox createBottomSection() {
-        VBox bottomBox = new VBox(10);
+    private BorderPane createBottomSection() {
+        BorderPane bottomBox = new BorderPane();
         bottomBox.setPadding(new Insets(10));
 
         // Botones CRUD
-        HBox buttonBox = new HBox(10);
-        buttonBox.setAlignment(Pos.CENTER);
+        HBox crudButtons = new HBox(10);
+        crudButtons.setAlignment(Pos.CENTER);
 
         addButton = new Button("Añadir");
         deleteButton = new Button("Eliminar");
         updateButton = new Button("Actualizar");
+        crudButtons.getChildren().addAll(addButton, deleteButton, updateButton);
 
-        buttonBox.getChildren().addAll(addButton, deleteButton, updateButton);
-        bottomBox.getChildren().add(buttonBox);
+        // Botón "Volver"
+        goBackButton = new Button("Volver");
+        goBackButton.setAlignment(Pos.BOTTOM_LEFT);
+
+        // Colocar los botones en el BorderPane
+        bottomBox.setCenter(crudButtons);
+        bottomBox.setLeft(goBackButton); // Botón "Volver" en la esquina inferior izquierda
 
         return bottomBox;
     }
@@ -209,7 +215,7 @@ public class DashboardView {
         return updateButton;
     }
 
-    public Object getViewTableInfoButton() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public Button getGoBackButton() {
+        return goBackButton;
     }
 }

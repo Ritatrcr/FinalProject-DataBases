@@ -1,18 +1,19 @@
 package finalproject;
 
 import controllers.ConnectionController;
+import controllers.UserSelectionController;
 import controllers.DashboardController;
-import modelo.DatabaseManager;
-import view.ConnectionView;
-import view.DashboardView;
-
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import modelo.DatabaseManager;
+import view.ConnectionView;
+import view.UserSelectionView;
+import view.DashboardView;
 
 public class FinalProject extends Application {
 
-    private static Stage primaryStage; // Ventana principal
+    private static Stage primaryStage;
 
     @Override
     public void start(Stage stage) {
@@ -38,23 +39,33 @@ public class FinalProject extends Application {
     }
 
     /**
+     * Muestra la vista de selección inicial después de establecer conexión.
+     *
+     * @param dbManager Instancia de DatabaseManager.
+     */
+    public static void showUserSelectionScene(DatabaseManager dbManager) {
+        UserSelectionView selectionView = new UserSelectionView();
+        UserSelectionController UserselectionController = new UserSelectionController(selectionView, primaryStage, dbManager);
+
+        Scene selectionScene = new Scene(selectionView.getLayout(), 900, 700);
+        primaryStage.setScene(selectionScene);
+        primaryStage.setTitle("Seleccionar Opción");
+    }
+
+    /**
      * Muestra el dashboard después de establecer la conexión a la base de datos.
      *
-     * @param dbManager Instancia de DatabaseManager
-     * @param databaseName Nombre de la base de datos seleccionada
+     * @param dbManager Instancia de DatabaseManager.
      */
- public static void showDashboardScene(DatabaseManager dbManager) {
-    DashboardView dashboardView = new DashboardView();
-    DashboardController dashboardController = new DashboardController(dashboardView, dbManager);
-    dashboardController.setup();
+    public static void showDashboardScene(DatabaseManager dbManager) {
+        DashboardView dashboardView = new DashboardView();
+        DashboardController dashboardController = new DashboardController(dashboardView, dbManager);
+        dashboardController.setup();
 
-    // Crear la escena con el ScrollPane de la vista
-    Scene dashboardScene = new Scene(dashboardView.getScrollPane(), 900, 700);
-    primaryStage.setScene(dashboardScene); // Cambiar la escena
-    primaryStage.setTitle("Dashboard de Gestión de Base de Datos"); // Opcional: Cambiar título
-}
-
-
+        Scene dashboardScene = new Scene(dashboardView.getScrollPane(), 900, 700);
+        primaryStage.setScene(dashboardScene);
+        primaryStage.setTitle("Dashboard de Gestión de Base de Datos");
+    }
 
     @Override
     public void stop() throws Exception {

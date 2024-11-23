@@ -1,5 +1,6 @@
 package controllers;
 
+import finalproject.FinalProject;
 import modelo.DatabaseManager;
 import view.DashboardView;
 import javafx.collections.FXCollections;
@@ -37,7 +38,10 @@ public class DashboardController {
         view.getAddButton().setOnAction(this::addRecord);
         view.getDeleteButton().setOnAction(this::deleteRecord);
         view.getUpdateButton().setOnAction(this::updateRecord);
-
+        view.getGoBackButton().setOnAction(event -> {
+        // Cambiar a la vista de selección de usuario
+        FinalProject.showUserSelectionScene(dbManager);
+    });
         // Carga las bases de datos al inicio
         loadDatabases();
     }
