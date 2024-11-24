@@ -1,12 +1,10 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controllers;
 
 import finalproject.FinalProject;
+import javafx.scene.Scene;
 import javafx.stage.Stage;
 import modelo.DatabaseManager;
+import view.UserQueryView;
 import view.UserSelectionView;
 
 /**
@@ -45,8 +43,18 @@ public class UserSelectionController {
 
         // Acción para realizar queries
         view.getRealizarQueryButton().setOnAction(event -> {
-            // Aquí se redirigiría a la vista de queries (por implementar)
-            System.out.println("Realizar Query seleccionado");
+            // Crear la vista de consultas
+            UserQueryView queryView = new UserQueryView();
+
+            // Crear la escena de consultas
+            Scene queryScene = new Scene(queryView.getLayout(), 900, 700);
+
+            // Crear el controlador de consultas, pasando la escena
+            UserQueryController queryController = new UserQueryController(queryView, dbManager, queryScene);
+
+            // Mostrar la escena de consultas
+            primaryStage.setScene(queryScene);
+            primaryStage.setTitle("Realizar Query");
         });
     }
 }

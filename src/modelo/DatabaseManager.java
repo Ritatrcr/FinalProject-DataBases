@@ -96,6 +96,26 @@ public class DatabaseManager {
 
     return columnNames;
 }
+public List<String> getColumnTypes(String database, String tableName) throws SQLException {
+        List<String> columnTypes = new ArrayList<>();
+        String query = "SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? ORDER BY ORDINAL_POSITION";
+        PreparedStatement stmt = connection.prepareStatement(query);
+        stmt.setString(1, database);
+        stmt.setString(2, tableName);
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            columnTypes.add(rs.getString("DATA_TYPE"));
+        }
+        return columnTypes;
+    }
+public ResultSet executeQuery(String query) throws SQLException {
+    if (connection == null || connection.isClosed()) {
+        throw new SQLException("No hay conexión activa con la base de datos.");
+    }
+
+    Statement stmt = connection.createStatement();
+    return stmt.executeQuery(query);
+}
 
 
 
