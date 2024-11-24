@@ -13,7 +13,7 @@ public class DatabaseManager {
     private Connection connection;
     private String ip, port, username, password;
     private TextArea terminalOutput;
-
+    private String databaseName;
     /**
      * Constructor privado para el patrón Singleton.
      */

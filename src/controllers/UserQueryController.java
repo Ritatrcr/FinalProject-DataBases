@@ -8,6 +8,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import modelo.DatabaseManager;
+import view.FieldAlias;
 import view.UserQueryView;
 import view.TableFieldsView;
 import view.ResultView;
@@ -15,8 +16,6 @@ import view.ResultView;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class UserQueryController {
     private UserQueryView view;
@@ -24,7 +23,7 @@ public class UserQueryController {
     private TableFieldsView tableView;
     private ResultView resultView;
     private Scene mainScene;
-    private StringBuilder queryBuilder;
+    private String query; // Almacena el query completo
 
     public UserQueryController(UserQueryView view, DatabaseManager dbManager, Scene mainScene) {
         this.view = view;
@@ -32,7 +31,7 @@ public class UserQueryController {
         this.mainScene = mainScene;
         this.tableView = new TableFieldsView();
         this.resultView = new ResultView();
-        this.queryBuilder = new StringBuilder();
+        this.query = "";
         setup();
     }
 
@@ -40,20 +39,12 @@ public class UserQueryController {
         loadDatabases();
         view.getDatabaseSelector().setOnAction(event -> loadTables());
         view.getFirstTableSelector().setOnAction(event -> {
-            try {
-                displaySelectedTablesStructure();
-            } catch (SQLException ex) {
-                Logger.getLogger(UserQueryController.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            displaySelectedTablesStructure();
             resetConditions();
             updateQuery();
         });
         view.getSecondTableSelector().setOnAction(event -> {
-            try {
-                displaySelectedTablesStructure();
-            } catch (SQLException ex) {
-                Logger.getLogger(UserQueryController.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            displaySelectedTablesStructure();
             resetConditions();
             updateQuery();
         });
@@ -93,7 +84,7 @@ public class UserQueryController {
         view.getSecondTableSelector().setItems(observableTables);
     }
 
-    private void displaySelectedTablesStructure() throws SQLException {
+    private void displaySelectedTablesStructure() {
         String database = view.getDatabaseSelector().getValue();
         if (database == null || database.isEmpty()) {
             return;
@@ -103,25 +94,32 @@ public class UserQueryController {
 
         StringBuilder sb = new StringBuilder();
 
-        if (table1 != null && !table1.isEmpty()) {
-            List<String> columnNames1 = dbManager.getColumnNames(database, table1);
-            List<String> columnTypes1 = dbManager.getColumnTypes(database, table1);
-            sb.append("Estructura de la tabla ").append(table1).append(":\n");
-            for (int i = 0; i < columnNames1.size(); i++) {
-                sb.append(columnNames1.get(i)).append(" - ").append(columnTypes1.get(i)).append("\n");
+        try {
+            if (table1 != null && !table1.isEmpty()) {
+                List<String> columnNames1 = dbManager.getColumnNames(database, table1);
+                List<String> columnTypes1 = dbManager.getColumnTypes(database, table1);
+                sb.append("Estructura de la tabla ").append(table1).append(":\n");
+                for (int i = 0; i < columnNames1.size(); i++) {
+                    sb.append(columnNames1.get(i)).append(" - ").append(columnTypes1.get(i)).append("\n");
+                }
+                sb.append("\n");
             }
-            sb.append("\n");
-        }
-        if (table2 != null && !table2.isEmpty()) {
-            List<String> columnNames2 = dbManager.getColumnNames(database, table2);
-            List<String> columnTypes2 = dbManager.getColumnTypes(database, table2);
-            sb.append("Estructura de la tabla ").append(table2).append(":\n");
-            for (int i = 0; i < columnNames2.size(); i++) {
-                sb.append(columnNames2.get(i)).append(" - ").append(columnTypes2.get(i)).append("\n");
+
+            if (table2 != null && !table2.isEmpty()) {
+                List<String> columnNames2 = dbManager.getColumnNames(database, table2);
+                List<String> columnTypes2 = dbManager.getColumnTypes(database, table2);
+                sb.append("Estructura de la tabla ").append(table2).append(":\n");
+                for (int i = 0; i < columnNames2.size(); i++) {
+                    sb.append(columnNames2.get(i)).append(" - ").append(columnTypes2.get(i)).append("\n");
+                }
+                sb.append("\n");
             }
-            sb.append("\n");
+
+            
+
+        } catch (SQLException e) {
+            handleError("Error obteniendo estructura de las tablas", e);
         }
-        view.showTableStructure(sb.toString());
     }
 
     private void navigateToTableFieldsView() {
@@ -133,19 +131,85 @@ public class UserQueryController {
             handleError("Por favor, selecciona una base de datos y al menos una tabla.", null);
             return;
         }
+        tableView.setDatabaseName(database);
+        ObservableList<FieldAlias> table1Fields = FXCollections.observableArrayList();
+        List<String> columnsTable1 = dbManager.getColumnNames(database, table1);
+        for (String column : columnsTable1) {
+            table1Fields.add(new FieldAlias(table1 + "." + column));
+        }
+        ObservableList<FieldAlias> table2Fields = FXCollections.observableArrayList();
+        if (table2 != null && !table2.isEmpty()) {
+            List<String> columnsTable2 = dbManager.getColumnNames(database, table2);
+            for (String column : columnsTable2) {
+                table2Fields.add(new FieldAlias(table2 + "." + column));
+            }
+        }
+        tableView.populateTableFields(table1Fields, table2Fields);
+        tableView.getGoBackButton().setOnAction(event -> {
+            // Obtener el query construido en TableFieldsView
+            String partialQuery = tableView.buildQuery();
+            
+            // Añadir condiciones adicionales
+            StringBuilder queryBuilder = new StringBuilder(partialQuery);
+            addAdditionalConditions(queryBuilder);
+            
+            // Actualizar el query completo
+            query = queryBuilder.toString();
+            
+            // Mostrar el query en la vista principal
+            view.getQueryTerminal().setText(query);
+            
+            // Regresar a la vista principal
+            mainScene.setRoot(view.getLayout());
+        });
+        mainScene.setRoot(tableView.getLayout());
+    }
 
-        try {
-            tableView.populateTableFields(database, table1, table2, dbManager);
-            tableView.getGoBackButton().setOnAction(event -> mainScene.setRoot(view.getLayout()));
-            mainScene.setRoot(tableView.getLayout());
-        } catch (SQLException e) {
-            handleError("Error navegando a la vista de campos de tabla", e);
+    private void addAdditionalConditions(StringBuilder queryBuilder) {
+        ObservableList<Node> conditions = view.getConditionSection().getChildren();
+        if (!conditions.isEmpty()) {
+            if (!queryBuilder.toString().contains("WHERE")) {
+                queryBuilder.append(" WHERE ");
+            } else {
+                queryBuilder.append(" AND ");
+            }
+            for (Node node : conditions) {
+                if (node instanceof HBox) {
+                    HBox condition = (HBox) node;
+                    ComboBox<String> fieldSelector = (ComboBox<String>) condition.getChildren().get(0);
+                    ComboBox<String> operatorSelector = (ComboBox<String>) condition.getChildren().get(1);
+                    TextField valueField = (TextField) condition.getChildren().get(2);
+
+                    String field = fieldSelector.getValue();
+                    String operator = operatorSelector.getValue();
+                    String value = valueField.getText();
+
+                    if (field != null && operator != null && value != null && !value.isEmpty()) {
+                        queryBuilder.append(field).append(" ").append(operator).append(" '").append(value).append("' AND ");
+                    }
+                }
+            }
+
+            // Eliminar el último " AND "
+            int lastIndex = queryBuilder.lastIndexOf(" AND ");
+            if (lastIndex != -1) {
+                queryBuilder.delete(lastIndex, queryBuilder.length());
+            }
         }
     }
 
-    private void navigateToResultView() throws SQLException {
-        String query = queryBuilder.toString();
+    private void executeQuery() throws SQLException {
+        if (query.isEmpty()) {
+            handleError("Por favor genera un query válido antes de ejecutarlo.", null);
+            return;
+        }
 
+        ResultSet rs = dbManager.executeQuery(query);
+        resultView.populateTable(rs);
+        resultView.getQueryTerminal().appendText("Query ejecutado correctamente.\n");
+    }
+
+    private void navigateToResultView() throws SQLException {
         if (query == null || query.isEmpty()) {
             handleError("Por favor genera un query antes de ver los resultados.", null);
             return;
@@ -156,18 +220,6 @@ public class UserQueryController {
         resultView.getGoBackButton().setOnAction(event -> mainScene.setRoot(view.getLayout()));
 
         mainScene.setRoot(resultView.getLayout());
-    }
-
-    private void executeQuery() throws SQLException {
-        String query = queryBuilder.toString();
-        if (query.isEmpty()) {
-            handleError("Por favor genera un query válido antes de ejecutarlo.", null);
-            return;
-        }
-
-        ResultSet rs = dbManager.executeQuery(query);
-        resultView.populateTable(rs);
-        view.getQueryTerminal().appendText("Query ejecutado correctamente.\n");
     }
 
     private void addConditionRow() {
@@ -197,54 +249,20 @@ public class UserQueryController {
         valueField.setOnKeyReleased(event -> updateQuery());
     }
 
-    private void resetConditions() {
-        view.getConditionSection().getChildren().clear();
+    private void updateQuery() {
+        // Re-construir el query basado en los alias y condiciones
+        String partialQuery = tableView.buildQuery();
+        StringBuilder queryBuilder = new StringBuilder(partialQuery);
+        addAdditionalConditions(queryBuilder);
+
+        query = queryBuilder.toString();
+
+        // Actualizar el query en la vista principal
+        view.getQueryTerminal().setText(query);
     }
 
-    private void updateQuery() {
-        String database = view.getDatabaseSelector().getValue();
-        String table1 = view.getFirstTableSelector().getValue();
-        String table2 = view.getSecondTableSelector().getValue();
-
-        queryBuilder.setLength(0); // Reiniciar query
-        queryBuilder.append("SELECT * FROM ");
-
-        if (table1 != null && !table1.isEmpty()) {
-            queryBuilder.append(database).append(".").append(table1);
-        }
-
-        if (table2 != null && !table2.isEmpty()) {
-            queryBuilder.append(", ").append(database).append(".").append(table2);
-        }
-
-        ObservableList<Node> conditions = view.getConditionSection().getChildren();
-        if (!conditions.isEmpty()) {
-            queryBuilder.append(" WHERE ");
-            for (Node node : conditions) {
-                if (node instanceof HBox) {
-                    HBox condition = (HBox) node;
-                    ComboBox<String> fieldSelector = (ComboBox<String>) condition.getChildren().get(0);
-                    ComboBox<String> operatorSelector = (ComboBox<String>) condition.getChildren().get(1);
-                    TextField valueField = (TextField) condition.getChildren().get(2);
-
-                    String field = fieldSelector.getValue();
-                    String operator = operatorSelector.getValue();
-                    String value = valueField.getText();
-
-                    if (field != null && operator != null && value != null && !value.isEmpty()) {
-                        queryBuilder.append(field).append(" ").append(operator).append(" '").append(value).append("' AND ");
-                    }
-                }
-            }
-
-            // Eliminar el último " AND "
-            int lastIndex = queryBuilder.lastIndexOf(" AND ");
-            if (lastIndex != -1) {
-                queryBuilder.delete(lastIndex, queryBuilder.length());
-            }
-        }
-
-        view.getQueryTerminal().setText(queryBuilder.toString());
+    private void resetConditions() {
+        view.getConditionSection().getChildren().clear();
     }
 
     private ObservableList<String> getAllFields() {

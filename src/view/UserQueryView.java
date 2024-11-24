@@ -5,14 +5,16 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
+/**
+ * Vista para consultas SQL dinámicas.
+ */
 public class UserQueryView {
     private BorderPane layout;
     private ComboBox<String> databaseSelector;
     private ComboBox<String> firstTableSelector, secondTableSelector;
-    private Button viewTableButton, viewResultButton, addConditionButton, executeQueryButton;
+    private Button viewTableButton, viewResultButton, goBackButton, addConditionButton, executeQueryButton, backToSelectionButton;
     private TextArea queryTerminal;
     private VBox conditionSection;
-    private TextArea tableStructureArea;
 
     public UserQueryView() {
         layout = new BorderPane();
@@ -54,18 +56,12 @@ public class UserQueryView {
         VBox centerSection = new VBox(10);
         centerSection.setPadding(new Insets(10));
 
-        // Estructura de la tabla
-        Label structureLabel = new Label("Estructura de la tabla:");
-        tableStructureArea = new TextArea();
-        tableStructureArea.setEditable(false);
-        tableStructureArea.setPrefHeight(150);
-
         conditionSection = new VBox(10);
         conditionSection.setStyle("-fx-border-color: lightgray; -fx-border-width: 1px;");
         Label conditionLabel = new Label("Condiciones:");
         addConditionButton = new Button("Añadir condición");
 
-        centerSection.getChildren().addAll(structureLabel, tableStructureArea, conditionLabel, conditionSection, addConditionButton);
+        centerSection.getChildren().addAll(conditionLabel, conditionSection, addConditionButton);
         return centerSection;
     }
 
@@ -83,8 +79,10 @@ public class UserQueryView {
 
         executeQueryButton = new Button("Ejecutar Query");
         viewResultButton = new Button("Ver Resultado");
+        goBackButton = new Button("Volver");
+        backToSelectionButton = new Button("Volver a Selección"); // Botón para regresar a UserSelection
 
-        buttonBox.getChildren().addAll(executeQueryButton, viewResultButton);
+        buttonBox.getChildren().addAll(executeQueryButton, viewResultButton, goBackButton, backToSelectionButton);
         bottomSection.getChildren().addAll(terminalLabel, queryTerminal, buttonBox);
         return bottomSection;
     }
@@ -113,6 +111,10 @@ public class UserQueryView {
         return viewResultButton;
     }
 
+    public Button getGoBackButton() {
+        return goBackButton;
+    }
+
     public Button getAddConditionButton() {
         return addConditionButton;
     }
@@ -121,15 +123,15 @@ public class UserQueryView {
         return executeQueryButton;
     }
 
+    public Button getBackToSelectionButton() {
+        return backToSelectionButton; // Devuelve el nuevo botón
+    }
+
     public TextArea getQueryTerminal() {
         return queryTerminal;
     }
 
     public VBox getConditionSection() {
         return conditionSection;
-    }
-
-    public void showTableStructure(String structureText) {
-        tableStructureArea.setText(structureText);
     }
 }
