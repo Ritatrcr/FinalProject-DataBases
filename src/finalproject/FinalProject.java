@@ -3,6 +3,7 @@ package finalproject;
 import controllers.ConnectionController;
 import controllers.UserSelectionController;
 import controllers.DashboardController;
+import controllers.UserQueryController;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -10,6 +11,7 @@ import modelo.DatabaseManager;
 import view.ConnectionView;
 import view.UserSelectionView;
 import view.DashboardView;
+import view.UserQueryView;
 
 public class FinalProject extends Application {
 
@@ -45,7 +47,7 @@ public class FinalProject extends Application {
      */
     public static void showUserSelectionScene(DatabaseManager dbManager) {
         UserSelectionView selectionView = new UserSelectionView();
-        UserSelectionController UserselectionController = new UserSelectionController(selectionView, primaryStage, dbManager);
+        UserSelectionController userSelectionController = new UserSelectionController(selectionView, primaryStage, dbManager);
 
         Scene selectionScene = new Scene(selectionView.getLayout(), 900, 700);
         primaryStage.setScene(selectionScene);
@@ -62,9 +64,25 @@ public class FinalProject extends Application {
         DashboardController dashboardController = new DashboardController(dashboardView, dbManager);
         dashboardController.setup();
 
-        Scene dashboardScene = new Scene(dashboardView.getScrollPane(), 900, 700);
+        Scene dashboardScene = new Scene(dashboardView.getLayout(), 900, 700);
         primaryStage.setScene(dashboardScene);
         primaryStage.setTitle("Dashboard de Gestión de Base de Datos");
+    }
+
+    /**
+     * Muestra la vista de consulta dinámica (UserQuery).
+     *
+     * @param dbManager Instancia de DatabaseManager.
+     */
+    public static void showUserQueryScene(DatabaseManager dbManager) {
+        UserQueryView userQueryView = new UserQueryView();
+        UserQueryController userQueryController = new UserQueryController(userQueryView, dbManager, primaryStage.getScene());
+        // Configurar el controlador
+        userQueryController.setup();
+
+        Scene userQueryScene = new Scene(userQueryView.getLayout(), 900, 700);
+        primaryStage.setScene(userQueryScene);
+        primaryStage.setTitle("Consulta Dinámica");
     }
 
     @Override

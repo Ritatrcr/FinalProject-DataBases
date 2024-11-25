@@ -8,6 +8,14 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.TableColumn;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextInputDialog;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,17 +40,14 @@ public class DashboardController {
      * Configura los eventos y la lógica de la vista del Dashboard.
      */
     public void setup() {
-        // Configura eventos
         view.getDatabaseSelector().setOnAction(event -> loadTables());
-        view.getLoadTableButton().setOnAction(this::loadTableData);
+        view.getTableSelector().setOnAction(event -> loadTableData(null));
         view.getAddButton().setOnAction(this::addRecord);
         view.getDeleteButton().setOnAction(this::deleteRecord);
         view.getUpdateButton().setOnAction(this::updateRecord);
-        view.getGoBackButton().setOnAction(event -> {
-        // Cambiar a la vista de selección de usuario
-        FinalProject.showUserSelectionScene(dbManager);
-    });
-        // Carga las bases de datos al inicio
+        view.getCreateViewButton().setOnAction(this::createView);
+        view.getViewStructureButton().setOnAction(event -> showTableStructure());
+        view.getGoBackButton().setOnAction(event -> FinalProject.showUserSelectionScene(dbManager));
         loadDatabases();
     }
 
@@ -78,59 +83,55 @@ public class DashboardController {
 
     /**
      * Carga los datos de la tabla seleccionada en el TableView.
-     *
-     * @param event Evento de clic del botón "Cargar Datos".
      */
     private void loadTableData(ActionEvent event) {
-        String selectedDatabase = view.getDatabaseSelector().getValue();
-        String selectedTable = view.getTableSelector().getValue();
+    String selectedDatabase = view.getDatabaseSelector().getValue();
+    String selectedTable = view.getTableSelector().getValue();
 
-        if (selectedDatabase == null || selectedDatabase.isEmpty()) {
-            showAlert("Error", "Por favor, selecciona una base de datos.");
-            return;
-        }
-
-        if (selectedTable == null || selectedTable.isEmpty()) {
-            showAlert("Error", "Por favor, selecciona una tabla.");
-            return;
-        }
-
-        // Limpia la tabla y los campos de entrada antes de cargar nuevos datos
-        view.getTableView().getColumns().clear();
-        view.getTableView().getItems().clear();
-
-        try {
-            ResultSet rs = dbManager.getTableData(selectedDatabase, selectedTable);
-            int columnCount = rs.getMetaData().getColumnCount();
-
-            // Obtener los nombres de las columnas y actualizarlos en los campos dinámicos
-            List<String> columnNames = dbManager.getColumnNames(selectedDatabase, selectedTable);
-            view.updateInputFields(columnNames);
-
-            // Crear columnas dinámicamente
-            for (int i = 1; i <= columnCount; i++) {
-                TableColumn<ObservableList<String>, String> column = new TableColumn<>(rs.getMetaData().getColumnName(i));
-                final int colIndex = i - 1;
-                column.setCellValueFactory(param -> new javafx.beans.property.SimpleStringProperty(param.getValue().get(colIndex)));
-                view.getTableView().getColumns().add(column);
-            }
-
-            // Cargar filas en el TableView
-            while (rs.next()) {
-                ObservableList<String> row = FXCollections.observableArrayList();
-                for (int i = 1; i <= columnCount; i++) {
-                    row.add(rs.getString(i));
-                }
-                view.getTableView().getItems().add(row);
-            }
-        } catch (SQLException e) {
-            showAlert("Error", "Error cargando datos de la tabla: " + e.getMessage());
-        }
+    if (selectedDatabase == null || selectedDatabase.isEmpty() || selectedTable == null || selectedTable.isEmpty()) {
+        view.disableActionButtons(); // Deshabilitar botones si no hay tabla seleccionada
+        return;
     }
-    
-    
+
+    view.getTableView().getColumns().clear();
+    view.getTableView().getItems().clear();
+
+    try {
+        ResultSet rs = dbManager.getTableData(selectedDatabase, selectedTable);
+        int columnCount = rs.getMetaData().getColumnCount();
+
+        // Configurar columnas del TableView
+        for (int i = 1; i <= columnCount; i++) {
+            TableColumn<ObservableList<String>, String> column = new TableColumn<>(rs.getMetaData().getColumnName(i));
+            final int colIndex = i - 1;
+            column.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().get(colIndex)));
+            view.getTableView().getColumns().add(column);
+        }
+
+        // Cargar filas
+        while (rs.next()) {
+            ObservableList<String> row = FXCollections.observableArrayList();
+            for (int i = 1; i <= columnCount; i++) {
+                row.add(rs.getString(i));
+            }
+            view.getTableView().getItems().add(row);
+        }
+
+        // Obtener los nombres de las columnas y actualizar los campos de entrada
+        List<String> columnNames = dbManager.getColumnNames(selectedDatabase, selectedTable);
+        view.updateInputFields(columnNames);
+
+        view.enableActionButtons(); // Habilitar botones si hay datos
+    } catch (SQLException e) {
+        showAlert("Error", "Error cargando datos de la tabla: " + e.getMessage());
+        view.disableActionButtons();
+    }
+}
+
+
+
     /**
-     * Muestra un cuadro de diálogo de alerta con un mensaje.
+     * Muestra un cuadro de diálogo de alerta.
      */
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -140,7 +141,70 @@ public class DashboardController {
         alert.showAndWait();
     }
 
-    private void addRecord(ActionEvent event) {
+    /**
+     * Muestra la estructura de la tabla seleccionada en una nueva ventana.
+     */
+    private void showTableStructure() {
+        String selectedDatabase = view.getDatabaseSelector().getValue();
+        String selectedTable = view.getTableSelector().getValue();
+
+        if (selectedDatabase == null || selectedDatabase.isEmpty() || selectedTable == null || selectedTable.isEmpty()) {
+            showAlert("Error", "Por favor, selecciona una base de datos y una tabla.");
+            return;
+        }
+
+        Stage structureStage = new Stage();
+        structureStage.setTitle("Estructura de la Tabla: " + selectedTable);
+
+        TableView<ObservableList<String>> structureTableView = new TableView<>();
+
+        // Configurar columnas del TableView
+        TableColumn<ObservableList<String>, String> columnName = new TableColumn<>("Columna");
+        columnName.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().get(0)));
+
+        TableColumn<ObservableList<String>, String> columnType = new TableColumn<>("Tipo");
+        columnType.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().get(1)));
+
+        TableColumn<ObservableList<String>, String> columnNullable = new TableColumn<>("Nulo");
+        columnNullable.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().get(2)));
+
+        TableColumn<ObservableList<String>, String> columnKey = new TableColumn<>("Clave");
+        columnKey.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().get(3)));
+
+        TableColumn<ObservableList<String>, String> columnDefault = new TableColumn<>("Por Defecto");
+        columnDefault.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().get(4)));
+
+        TableColumn<ObservableList<String>, String> columnExtra = new TableColumn<>("Extra");
+        columnExtra.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().get(5)));
+
+        structureTableView.getColumns().addAll(columnName, columnType, columnNullable, columnKey, columnDefault, columnExtra);
+
+        try {
+            ResultSet resultSet = dbManager.getTableStructure(selectedDatabase, selectedTable);
+            while (resultSet.next()) {
+                ObservableList<String> row = FXCollections.observableArrayList();
+                row.add(resultSet.getString("Field"));
+                row.add(resultSet.getString("Type"));
+                row.add(resultSet.getString("Null"));
+                row.add(resultSet.getString("Key"));
+                row.add(resultSet.getString("Default"));
+                row.add(resultSet.getString("Extra"));
+                structureTableView.getItems().add(row);
+            }
+        } catch (SQLException e) {
+            showAlert("Error", "No se pudo obtener la estructura de la tabla: " + e.getMessage());
+            return;
+        }
+
+        VBox layout = new VBox(10, structureTableView);
+        layout.setPadding(new Insets(10));
+
+        Scene scene = new Scene(layout, 600, 400);
+        structureStage.setScene(scene);
+        structureStage.show();
+    }
+
+   private void addRecord(ActionEvent event) {
     String selectedDatabase = view.getDatabaseSelector().getValue();
     String selectedTable = view.getTableSelector().getValue();
 
@@ -314,5 +378,37 @@ public class DashboardController {
         showAlert("Error", "No se pudo actualizar el registro. Revisa los datos e inténtalo de nuevo.");
     }
 }
+    
+    private void createView(ActionEvent event) 
+    {
+            String selectedDatabase = view.getDatabaseSelector().getValue();
+            String selectedTable = view.getTableSelector().getValue();
 
+            if (selectedDatabase == null || selectedDatabase.isEmpty()) {
+                showAlert("Error", "Por favor, selecciona una base de datos.");
+                return;
+            }
+
+            if (selectedTable == null || selectedTable.isEmpty()) {
+                showAlert("Error", "Por favor, selecciona una tabla.");
+                return;
+            }
+
+            TextInputDialog dialog = new TextInputDialog("vista_" + selectedTable);
+            dialog.setTitle("Crear Vista");
+            dialog.setHeaderText("Nombre de la Vista");
+            dialog.setContentText("Introduce el nombre de la vista:");
+
+            String viewName = dialog.showAndWait().orElse(null);
+            if (viewName == null || viewName.trim().isEmpty()) {
+                showAlert("Error", "El nombre de la vista no puede estar vacío.");
+                return;
+            }
+
+            String sql = "CREATE VIEW " + selectedDatabase + "." + viewName + " AS SELECT * FROM " + selectedDatabase + "." + selectedTable;
+            if (dbManager.executeUpdate(sql)) {
+                showAlert("Éxito", "Vista creada correctamente.");
+            } else {
+                showAlert("Error", "No se pudo crear la vista.");}
+    }
 }

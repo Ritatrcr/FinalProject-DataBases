@@ -1,5 +1,6 @@
 package controllers;
 
+import finalproject.FinalProject;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -12,7 +13,7 @@ import view.FieldAlias;
 import view.UserQueryView;
 import view.TableFieldsView;
 import view.ResultView;
-
+import view.DashboardView;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -22,6 +23,7 @@ public class UserQueryController {
     private DatabaseManager dbManager;
     private TableFieldsView tableView;
     private ResultView resultView;
+    private DashboardView dashboardview;
     private Scene mainScene;
     private String query; // Almacena el query completo
 
@@ -31,11 +33,12 @@ public class UserQueryController {
         this.mainScene = mainScene;
         this.tableView = new TableFieldsView();
         this.resultView = new ResultView();
+        this.dashboardview = new DashboardView();
         this.query = "";
         setup();
     }
 
-    private void setup() {
+    public void setup() {
         loadDatabases();
         view.getDatabaseSelector().setOnAction(event -> loadTables());
         view.getFirstTableSelector().setOnAction(event -> {
@@ -56,14 +59,11 @@ public class UserQueryController {
                 handleError("Error navegando a la vista de resultados", e);
             }
         });
-        view.getExecuteQueryButton().setOnAction(event -> {
-            try {
-                executeQuery();
-            } catch (SQLException e) {
-                handleError("Error ejecutando el query", e);
-            }
-        });
+        
         view.getAddConditionButton().setOnAction(event -> addConditionRow());
+        view.getGoBackButton().setOnAction(event -> navigateToDashboard());
+        view.getClearButton().setOnAction(event -> view.clearSelections());
+
     }
 
     private void loadDatabases() {
@@ -221,6 +221,9 @@ public class UserQueryController {
 
         mainScene.setRoot(resultView.getLayout());
     }
+   
+
+
 
     private void addConditionRow() {
         int conditionCount = view.getConditionSection().getChildren().size();
@@ -287,6 +290,16 @@ public class UserQueryController {
 
         return fields;
     }
+    private void navigateToDashboard() {
+    try {
+        // Llamar a FinalProject para gestionar la navegación al DashboardView
+        FinalProject.showDashboardScene(dbManager);
+        System.out.println("Navegando de UserQueryView a DashboardView...");
+    } catch (Exception e) {
+        handleError("Error navegando al DashboardView.", e);
+    }
+}
+
 
     private void handleError(String message, Exception e) {
         if (e != null) e.printStackTrace();

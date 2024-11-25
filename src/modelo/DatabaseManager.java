@@ -13,7 +13,7 @@ public class DatabaseManager {
     private Connection connection;
     private String ip, port, username, password;
     private TextArea terminalOutput;
-    private String databaseName;
+
     /**
      * Constructor privado para el patrón Singleton.
      */
@@ -96,28 +96,18 @@ public class DatabaseManager {
 
     return columnNames;
 }
-public List<String> getColumnTypes(String database, String tableName) throws SQLException {
-        List<String> columnTypes = new ArrayList<>();
-        String query = "SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? ORDER BY ORDINAL_POSITION";
-        PreparedStatement stmt = connection.prepareStatement(query);
-        stmt.setString(1, database);
-        stmt.setString(2, tableName);
-        ResultSet rs = stmt.executeQuery();
-        while (rs.next()) {
-            columnTypes.add(rs.getString("DATA_TYPE"));
-        }
-        return columnTypes;
-    }
-public ResultSet executeQuery(String query) throws SQLException {
-    if (connection == null || connection.isClosed()) {
-        throw new SQLException("No hay conexión activa con la base de datos.");
-    }
 
-    Statement stmt = connection.createStatement();
-    return stmt.executeQuery(query);
+
+public ResultSet getTableStructure(String databaseName, String tableName) {
+    String query = "DESCRIBE " + databaseName + "." + tableName;
+    try {
+        Statement stmt = connection.createStatement();
+        return stmt.executeQuery(query);
+    } catch (SQLException e) {
+        terminalOutput.appendText("Error obteniendo estructura de la tabla: " + e.getMessage() + "\n");
+        return null;
+    }
 }
-
-
 
     /**
      * Obtiene una lista de las tablas de una base de datos específica.
@@ -227,6 +217,31 @@ public List<String> getMandatoryFields(String databaseName, String tableName) {
 
     return mandatoryFields;
 }
+public List<String> getColumnTypes(String database, String tableName) throws SQLException {
+        List<String> columnTypes = new ArrayList<>();
+        String query = "SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? ORDER BY ORDINAL_POSITION";
+        PreparedStatement stmt = connection.prepareStatement(query);
+        stmt.setString(1, database);
+        stmt.setString(2, tableName);
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            columnTypes.add(rs.getString("DATA_TYPE"));
+        }
+        return columnTypes;
+    }
+
+    /**
+     * Ejecuta un query SQL y devuelve el resultado.
+     */
+    public ResultSet executeQuery(String query) throws SQLException {
+        if (connection == null || connection.isClosed()) {
+            throw new SQLException("No hay conexión activa con la base de datos.");
+        }
+
+        Statement stmt = connection.createStatement();
+        return stmt.executeQuery(query);
+    }
+
 
     /**
      * Cierra la conexión a la base de datos.
@@ -241,4 +256,8 @@ public List<String> getMandatoryFields(String databaseName, String tableName) {
             terminalOutput.appendText("Error cerrando conexión: " + e.getMessage() + "\n");
         }
     }
+    public Connection getConnection() {
+    return connection;
+}
+
 }

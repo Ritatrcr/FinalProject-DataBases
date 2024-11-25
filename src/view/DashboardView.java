@@ -12,16 +12,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Vista para el Dashboard de gestión de bases de datos y tablas.
+  Vista para el Dashboard de gestión de bases de datos y tablas.
  */
 public class DashboardView {
-    private ScrollPane scrollPane; // ScrollPane para habilitar desplazamiento
     private BorderPane layout; // Layout principal
     private ComboBox<String> databaseSelector; // ComboBox para seleccionar base de datos
     private ComboBox<String> tableSelector; // ComboBox para seleccionar tabla
     private TableView<ObservableList<String>> tableView; // Tabla para mostrar datos
-    private Button addButton, deleteButton, updateButton, loadTableButton, goBackButton; // Botones CRUD y "Volver"
-    private VBox inputFieldsArea; // Área dinámica para los campos de entrada
+    private Button addButton, deleteButton, updateButton, goBackButton, createViewButton, viewStructureButton; // Botones CRUD y otros
+    private HBox inputFieldsArea; // Área dinámica para los campos de entrada en una sola línea
     private List<TextField> inputFields; // Lista de campos dinámicos de entrada
 
     /**
@@ -37,7 +36,7 @@ public class DashboardView {
         // Contenedor de inputs dinámicos
         VBox centerBox = createCenterSection();
 
-        // Contenedor inferior: Botones CRUD y botón "Volver"
+        // Contenedor inferior: Botones CRUD y otros botones
         BorderPane bottomBox = createBottomSection();
 
         // Configurar layout principal
@@ -45,13 +44,10 @@ public class DashboardView {
         layout.setCenter(centerBox);
         layout.setBottom(bottomBox);
 
-        // Envolver el layout en un ScrollPane
-        scrollPane = new ScrollPane();
-        scrollPane.setContent(layout);
-        scrollPane.setFitToWidth(true); // Ajustar al ancho de la ventana
-        scrollPane.setFitToHeight(true); // Ajustar al alto de la ventana
+        // Deshabilitar botones por defecto
+        disableActionButtons();
     }
-  
+
     /**
      * Crea la sección superior con ComboBoxes para seleccionar base de datos y tabla.
      *
@@ -74,11 +70,12 @@ public class DashboardView {
         tableSelector.setPromptText("Selecciona una tabla");
         tableSelector.setPrefWidth(200);
 
-        // Botón para cargar datos de la tabla seleccionada
-        loadTableButton = new Button("Cargar Datos");
+        // Botón "Ver Estructura" al lado del selector de tablas
+        viewStructureButton = new Button("Ver Estructura");
+        viewStructureButton.setStyle("-fx-background-color: lightgray; -fx-text-fill: black;");
 
         // Añadir componentes al contenedor
-        topBox.getChildren().addAll(databaseLabel, databaseSelector, tableLabel, tableSelector, loadTableButton);
+        topBox.getChildren().addAll(databaseLabel, databaseSelector, tableLabel, tableSelector, viewStructureButton);
 
         return topBox;
     }
@@ -93,10 +90,10 @@ public class DashboardView {
         centerBox.setPadding(new Insets(10));
         centerBox.setAlignment(Pos.CENTER);
 
-        // Área dinámica para los inputs
-        inputFieldsArea = new VBox(10); // Cambiado a VBox para mejor distribución
+        // Área dinámica para los inputs en una sola línea
+        inputFieldsArea = new HBox(10);
         inputFieldsArea.setPadding(new Insets(10));
-        inputFieldsArea.setAlignment(Pos.TOP_LEFT);
+        inputFieldsArea.setAlignment(Pos.CENTER_LEFT);
 
         // Inicializa la lista de campos de entrada
         inputFields = new ArrayList<>();
@@ -105,12 +102,18 @@ public class DashboardView {
         tableView = new TableView<>();
         tableView.setPlaceholder(new Label("Seleccione una tabla para ver sus datos"));
 
-        centerBox.getChildren().addAll(inputFieldsArea, tableView);
+        // Botón "Crear Vista" debajo de la tabla
+        createViewButton = new Button("Crear Vista");
+        createViewButton.setMaxWidth(Double.MAX_VALUE); // Ocupa todo el ancho
+        createViewButton.setStyle("-fx-background-color: lightblue; -fx-text-fill: black;"); // Estilo opcional
+
+        // Añadir tabla y botón al contenedor
+        centerBox.getChildren().addAll(inputFieldsArea, tableView, createViewButton);
         return centerBox;
     }
 
     /**
-     * Crea la sección inferior con botones para operaciones CRUD y el botón "Volver".
+     * Crea la sección inferior con botones para operaciones CRUD y otros botones.
      *
      * @return BorderPane con los botones CRUD y "Volver".
      */
@@ -118,22 +121,28 @@ public class DashboardView {
         BorderPane bottomBox = new BorderPane();
         bottomBox.setPadding(new Insets(10));
 
-        // Botones CRUD
+        // Contenedor de botones CRUD
         HBox crudButtons = new HBox(10);
         crudButtons.setAlignment(Pos.CENTER);
 
-        addButton = new Button("Añadir");
         deleteButton = new Button("Eliminar");
-        updateButton = new Button("Actualizar");
-        crudButtons.getChildren().addAll(addButton, deleteButton, updateButton);
+        updateButton = new Button("Modificar");
+        addButton = new Button("Añadir");
+
+        // Estilizar botones CRUD
+        deleteButton.setStyle("-fx-background-color: red; -fx-text-fill: white;"); // Botón rojo
+        updateButton.setStyle("-fx-background-color: orange; -fx-text-fill: black;"); // Botón amarillo
+        addButton.setStyle("-fx-background-color: green; -fx-text-fill: white;"); // Botón verde
+
+        crudButtons.getChildren().addAll(deleteButton, updateButton, addButton);
 
         // Botón "Volver"
         goBackButton = new Button("Volver");
         goBackButton.setAlignment(Pos.BOTTOM_LEFT);
 
-        // Colocar los botones en el BorderPane
+        // Configuración del BorderPane
         bottomBox.setCenter(crudButtons);
-        bottomBox.setLeft(goBackButton); // Botón "Volver" en la esquina inferior izquierda
+        bottomBox.setLeft(goBackButton);
 
         return bottomBox;
     }
@@ -147,21 +156,13 @@ public class DashboardView {
         inputFieldsArea.getChildren().clear(); // Limpia el área dinámica
         inputFields.clear(); // Limpia la lista de campos existentes
 
-        // Genera un campo de texto para cada columna en formato fila sin etiquetas
-        HBox row = new HBox(10);
-        row.setAlignment(Pos.CENTER_LEFT);
-
         for (String columnName : columnNames) {
             TextField textField = new TextField();
-            textField.setPromptText(columnName); // Utiliza el nombre de la columna como placeholder
+            textField.setPromptText(columnName);
             textField.setPrefWidth(150);
-            row.getChildren().add(textField);
-
-            // Añadir el campo a la lista
             inputFields.add(textField);
+            inputFieldsArea.getChildren().add(textField);
         }
-
-        inputFieldsArea.getChildren().add(row);
     }
 
     /**
@@ -178,25 +179,42 @@ public class DashboardView {
     }
 
     /**
-     * Retorna el ScrollPane principal para la vista.
-     *
-     * @return El ScrollPane con el contenido.
+     * Deshabilita todos los botones de acción (Eliminar, Modificar, Añadir, Crear Vista).
      */
-    public ScrollPane getScrollPane() {
-        return scrollPane;
+    public void disableActionButtons() {
+        deleteButton.setDisable(true);
+        updateButton.setDisable(true);
+        addButton.setDisable(true);
+        createViewButton.setDisable(true);
+        viewStructureButton.setDisable(true);
     }
 
-    // Getters para otros componentes
+    /**
+     * Habilita todos los botones de acción (Eliminar, Modificar, Añadir, Crear Vista).
+     */
+    public void enableActionButtons() {
+        deleteButton.setDisable(false);
+        updateButton.setDisable(false);
+        addButton.setDisable(false);
+        createViewButton.setDisable(false);
+        viewStructureButton.setDisable(false);
+    }
+
+    // Getters
+    public BorderPane getLayout() {
+    if (layout == null) {
+        System.out.println("Error: El layout no está inicializado.");
+        throw new IllegalStateException("El layout no está inicializado.");
+    }
+    return layout;
+}
+
     public ComboBox<String> getDatabaseSelector() {
         return databaseSelector;
     }
 
     public ComboBox<String> getTableSelector() {
         return tableSelector;
-    }
-
-    public Button getLoadTableButton() {
-        return loadTableButton;
     }
 
     public TableView<ObservableList<String>> getTableView() {
@@ -218,4 +236,15 @@ public class DashboardView {
     public Button getGoBackButton() {
         return goBackButton;
     }
+
+    public Button getCreateViewButton() {
+        return createViewButton;
+    }
+
+    public Button getViewStructureButton() {
+        return viewStructureButton;
+    }
+
+    public HBox getInputFieldsArea() {
+        return inputFieldsArea;}
 }
