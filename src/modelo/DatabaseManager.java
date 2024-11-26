@@ -28,11 +28,30 @@ public class DatabaseManager {
     /**
      * Obtiene la instancia única de DatabaseManager.
      */
-    public static DatabaseManager getInstance(String ip, String port, String username, String password, TextArea terminalOutput) {
-        if (instance == null) {
+     public static DatabaseManager getInstance(String ip, String port, String username, String password, TextArea terminalOutput) {
+        // Reinicializar la instancia si los parámetros han cambiado
+        if (instance == null || !instance.isSameConfiguration(ip, port, username, password)) {
+            if (instance != null) {
+                instance.closeConnection(); // Cerrar conexión previa si existe
+            }
             instance = new DatabaseManager(ip, port, username, password, terminalOutput);
         }
         return instance;
+    }
+    private boolean isSameConfiguration(String ip, String port, String username, String password) {
+        return this.ip.equals(ip) && this.port.equals(port) &&
+                this.username.equals(username) && this.password.equals(password);
+    }
+
+    /**
+     * Verifica si hay una conexión activa.
+     */
+    public boolean isConnected() {
+        try {
+            return connection != null && !connection.isClosed();
+        } catch (SQLException e) {
+            return false;
+        }
     }
 
     /**
