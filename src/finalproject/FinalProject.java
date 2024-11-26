@@ -1,7 +1,6 @@
 package finalproject;
 
 import controllers.ConnectionController;
-import controllers.UserSelectionController;
 import controllers.DashboardController;
 import controllers.UserQueryController;
 import javafx.application.Application;
@@ -9,7 +8,6 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import modelo.DatabaseManager;
 import view.ConnectionView;
-import view.UserSelectionView;
 import view.DashboardView;
 import view.UserQueryView;
 
@@ -45,14 +43,7 @@ public class FinalProject extends Application {
      *
      * @param dbManager Instancia de DatabaseManager.
      */
-    public static void showUserSelectionScene(DatabaseManager dbManager) {
-        UserSelectionView selectionView = new UserSelectionView();
-        UserSelectionController userSelectionController = new UserSelectionController(selectionView, primaryStage, dbManager);
-
-        Scene selectionScene = new Scene(selectionView.getLayout(), 900, 700);
-        primaryStage.setScene(selectionScene);
-        primaryStage.setTitle("Seleccionar Opción");
-    }
+    
 
     /**
      * Muestra el dashboard después de establecer la conexión a la base de datos.

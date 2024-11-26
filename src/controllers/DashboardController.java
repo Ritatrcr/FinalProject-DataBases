@@ -20,6 +20,7 @@ import javafx.stage.Stage;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import view.UserQueryView;
 
 public class DashboardController {
     private DashboardView view;
@@ -47,7 +48,21 @@ public class DashboardController {
         view.getUpdateButton().setOnAction(this::updateRecord);
         view.getCreateViewButton().setOnAction(this::createView);
         view.getViewStructureButton().setOnAction(event -> showTableStructure());
-        view.getGoBackButton().setOnAction(event -> FinalProject.showUserSelectionScene(dbManager));
+view.getGoBackButton().setOnAction(event -> {
+    // Crear la vista de consultas
+    UserQueryView queryView = new UserQueryView();
+
+    // Crear la escena de consultas
+    Scene queryScene = new Scene(queryView.getLayout(), 900, 700);
+
+    // Crear el controlador de consultas, pasando la escena
+    UserQueryController queryController = new UserQueryController(queryView, dbManager, queryScene);
+
+    // Mostrar la escena de consultas
+    Stage primaryStage = (Stage) view.getGoBackButton().getScene().getWindow();
+    primaryStage.setScene(queryScene);
+    primaryStage.setTitle("Realizar Query");
+});
         loadDatabases();
     }
 

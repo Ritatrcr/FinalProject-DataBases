@@ -55,11 +55,8 @@ public class ConnectionController {
     public void handle(ActionEvent event) {
         // Asegúrate de que la conexión fue exitosa
         if (dbManager != null) {
-            // Define el nombre de la base de datos que deseas usar (puedes permitir que el usuario lo seleccione)
-            String selectedDatabase = "your_database_name"; // Cambia esto al nombre de tu base de datos
-
-            // Cambia a la vista de la seleccion
-            FinalProject.showUserSelectionScene(dbManager);
+            // Cambia a la vista del Dashboard
+            FinalProject.showDashboardScene(dbManager);
         } else {
             view.getTerminalOutput().appendText("No se ha establecido una conexión con la base de datos.\n");
         }

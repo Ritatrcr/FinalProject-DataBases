@@ -19,7 +19,7 @@ public class DashboardView {
     private ComboBox<String> databaseSelector; // ComboBox para seleccionar base de datos
     private ComboBox<String> tableSelector; // ComboBox para seleccionar tabla
     private TableView<ObservableList<String>> tableView; // Tabla para mostrar datos
-    private Button addButton, deleteButton, updateButton, goBackButton, createViewButton, viewStructureButton; // Botones CRUD y otros
+    private Button addButton, deleteButton, updateButton, goQueryButton, createViewButton, viewStructureButton; // Botones CRUD y otros
     private HBox inputFieldsArea; // Área dinámica para los campos de entrada en una sola línea
     private List<TextField> inputFields; // Lista de campos dinámicos de entrada
 
@@ -136,13 +136,13 @@ public class DashboardView {
 
         crudButtons.getChildren().addAll(deleteButton, updateButton, addButton);
 
-        // Botón "Volver"
-        goBackButton = new Button("Volver");
-        goBackButton.setAlignment(Pos.BOTTOM_LEFT);
+        
+        goQueryButton = new Button("Realizar Query");
+        goQueryButton.setAlignment(Pos.BOTTOM_LEFT);
 
         // Configuración del BorderPane
         bottomBox.setCenter(crudButtons);
-        bottomBox.setLeft(goBackButton);
+        bottomBox.setLeft(goQueryButton);
 
         return bottomBox;
     }
@@ -234,7 +234,7 @@ public class DashboardView {
     }
 
     public Button getGoBackButton() {
-        return goBackButton;
+        return goQueryButton;
     }
 
     public Button getCreateViewButton() {
