@@ -4,6 +4,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
@@ -14,6 +15,7 @@ public class UserQueryView {
     private Button viewTableButton, viewResultButton, goBackButton, addConditionButton,clearButton;
     private TextArea queryTerminal;
     private VBox conditionSection;
+    
 
     // Lista de tablas originales para restaurar opciones
    
@@ -49,7 +51,7 @@ public class UserQueryView {
 
     private HBox createTopSection() {
         HBox topSection = new HBox(10);
-        topSection.setPadding(new Insets(10));
+        topSection.setPadding(new Insets(80));
         topSection.setAlignment(Pos.CENTER_LEFT);
 
         databaseSelector = new ComboBox<>();
@@ -58,11 +60,13 @@ public class UserQueryView {
 
         firstTableSelector = new ComboBox<>();
         firstTableSelector.setPromptText("Selecciona la tabla 1");
-        firstTableSelector.setMaxWidth(Double.MAX_VALUE);
+        firstTableSelector.setMaxWidth(200); // Establece un ancho máximo más pequeño
+        firstTableSelector.setPrefWidth(150);
 
         secondTableSelector = new ComboBox<>();
         secondTableSelector.setPromptText("Selecciona la tabla 2");
-        secondTableSelector.setMaxWidth(Double.MAX_VALUE);
+        secondTableSelector.setMaxWidth(200); // Establece un ancho máximo más pequeño
+        secondTableSelector.setPrefWidth(150); 
 
         viewTableButton = new Button("Ver Tabla(s)");
         viewTableButton.setMaxWidth(Double.MAX_VALUE);
@@ -77,67 +81,110 @@ public class UserQueryView {
     }
 
     private VBox createCenterSection() {
-        VBox centerSection = new VBox(10);
-        centerSection.setPadding(new Insets(10));
-        centerSection.setFillWidth(true);
+    VBox centerSection = new VBox(10);
+    centerSection.setPadding(new Insets(10));
+    centerSection.setFillWidth(true);
 
-        conditionSection = new VBox(10);
-        conditionSection.setStyle("-fx-border-color: lightgray; -fx-border-width: 1px; -fx-border-radius: 5; -fx-padding: 10; -fx-background-color: #f9f9f9;");
-        VBox.setVgrow(conditionSection, Priority.ALWAYS);
+    // Sección de condiciones con borde y estilo
+    conditionSection = new VBox(5);
+    conditionSection.setPrefHeight(100); // Altura preferida más pequeña
+    conditionSection.setMaxHeight(100); // Altura máxima ajustada
+    conditionSection.setStyle("-fx-border-color: lightgray; -fx-border-width: 1px; -fx-border-radius: 5; -fx-padding: 10; -fx-background-color: #f9f9f9;");
+    VBox.setVgrow(conditionSection, Priority.NEVER); // Evitar que crezca más allá de la altura establecida
 
-        Label conditionLabel = new Label("Condiciones:");
-        conditionLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
-        conditionLabel.setMaxWidth(Double.MAX_VALUE);
+    // Etiqueta de condiciones
+    Label conditionLabel = new Label("Condiciones:");
+    conditionLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold;");
+    conditionLabel.setMaxWidth(Double.MAX_VALUE);
 
-        addConditionButton = new Button("Añadir condición");
-        addConditionButton.setMaxWidth(Double.MAX_VALUE);
-        
+    // Contenedor superior para la etiqueta y el botón "+"
+    HBox headerBox = new HBox();
+    headerBox.setAlignment(Pos.CENTER_LEFT); // Etiqueta alineada a la izquierda
+    headerBox.setSpacing(10); // Espaciado entre elementos
 
-        centerSection.getChildren().addAll(conditionLabel, conditionSection, addConditionButton);
-        return centerSection;
+    // Botón para añadir condición (+)
+    addConditionButton = new Button("+");
+    addConditionButton.setStyle("-fx-background-color: lightblue; -fx-text-fill: black; -fx-font-size: 16px; -fx-font-weight: bold; -fx-border-radius: 5;");
+    addConditionButton.setPrefSize(30, 30); // Tamaño del botón
+    addConditionButton.setDisable(true); // Deshabilitado por defecto
+    HBox.setMargin(addConditionButton, new Insets(0, 0, 0, 10)); // Márgenes para ajustar posición
+
+    // Listener para habilitar/deshabilitar el botón cuando ambas tablas están seleccionadas
+    firstTableSelector.valueProperty().addListener((observable, oldValue, newValue) -> toggleAddConditionButton());
+    secondTableSelector.valueProperty().addListener((observable, oldValue, newValue) -> toggleAddConditionButton());
+
+    // Añadir etiqueta y botón al header
+    headerBox.getChildren().addAll(conditionLabel, addConditionButton);
+    headerBox.setAlignment(Pos.CENTER_LEFT); // Botón alineado a la derecha en el contenedor
+
+    // Añadir la cabecera y la sección de condiciones al contenedor principal
+    centerSection.getChildren().addAll(headerBox, conditionSection);
+
+    return centerSection;
+}
+
+
+    /**
+     * Habilita o deshabilita el botón de añadir condición según si hay dos tablas seleccionadas.
+     */
+    private void toggleAddConditionButton() {
+        boolean bothTablesSelected = firstTableSelector.getValue() != null && secondTableSelector.getValue() != null;
+        addConditionButton.setDisable(!bothTablesSelected);
     }
+
 
     private VBox createBottomSection() {
     VBox bottomSection = new VBox(15);
     bottomSection.setPadding(new Insets(10));
 
-    // Etiqueta para la terminal
-    Label terminalLabel = new Label("Query MySQL:");
-    terminalLabel.setMaxWidth(Double.MAX_VALUE);
 
-    // Inicializar queryTerminal si no está ya inicializado
-    
-        queryTerminal = new TextArea();
-        queryTerminal.setEditable(false);
-        queryTerminal.setPrefHeight(100);
-        queryTerminal.setWrapText(true); // Asegura que el texto se ajuste al ancho
-        queryTerminal.setStyle("-fx-border-color: lightblue; -fx-border-width: 1px;"); // Opcional: Estilo para diferenciar
-    
+    // Compartimiento para mostrar el query en tiempo real
+    VBox queryDisplayContainer = new VBox();
+    queryDisplayContainer.setStyle("-fx-border-color: lightgray; -fx-border-width: 1px; -fx-border-radius: 5; -fx-padding: 10;");
+    queryDisplayContainer.setPadding(new Insets(5));
+    Label queryDisplayLabel = new Label("Query en tiempo real MySQL:");
+    TextArea queryRealTimeDisplay = new TextArea();
+    queryRealTimeDisplay.setEditable(false);
+    queryRealTimeDisplay.setPrefHeight(100);
+    queryDisplayContainer.getChildren().addAll(queryDisplayLabel, queryRealTimeDisplay);
 
-    // Botones en la parte inferior
-    HBox buttonBox = new HBox(15);
-    buttonBox.setAlignment(Pos.CENTER);
+    // TextArea para la terminal principal
+    queryTerminal = new TextArea();
+    queryTerminal.setEditable(false);
+    queryTerminal.setPrefHeight(200); // Aumentar el tamaño del campo de texto
+    queryTerminal.setWrapText(true); // Ajustar texto al ancho
+    queryTerminal.setStyle("-fx-border-color: lightblue; -fx-border-width: 1px; -fx-border-radius: 5;");
 
-    // Botón Ver Resultado
-    viewResultButton = new Button("Ver Resultado");
-    viewResultButton.setMaxWidth(Double.MAX_VALUE);
-
-    // Botón Volver
+    // Botón Volver en la parte inferior izquierda
+    HBox goBackBox = new HBox();
+    goBackBox.setAlignment(Pos.BOTTOM_LEFT);
     goBackButton = new Button("Volver");
+    goBackButton.setStyle("-fx-background-color: lightgray; -fx-border-color: gray; -fx-font-size: 14px;");
     goBackButton.setMaxWidth(Double.MAX_VALUE);
+    goBackBox.getChildren().add(goBackButton);
 
-    // Botón Limpiar
+    // Botones Limpiar y Ver Resultado centrados
+    HBox centerButtonsBox = new HBox(15);
+    centerButtonsBox.setAlignment(Pos.CENTER);
+
     clearButton = new Button("Limpiar");
-    clearButton.setMaxWidth(Double.MAX_VALUE);
+    clearButton.setStyle("-fx-background-color: red; -fx-text-fill: white; -fx-font-size: 14px;");
+    clearButton.setMaxWidth(150);
 
-    // Añadir los botones al contenedor buttonBox
-    buttonBox.getChildren().addAll(viewResultButton, goBackButton, clearButton);
+    viewResultButton = new Button("Ver Resultado");
+    viewResultButton.setStyle("-fx-background-color: green; -fx-text-fill: white; -fx-font-size: 14px;");
+    viewResultButton.setMaxWidth(150);
+
+    centerButtonsBox.getChildren().addAll(clearButton, viewResultButton);
 
     // Añadir elementos al contenedor bottomSection
-    bottomSection.getChildren().addAll(terminalLabel, queryTerminal, buttonBox);
+    bottomSection.getChildren().addAll( queryDisplayContainer, queryTerminal, goBackBox, centerButtonsBox);
 
     return bottomSection;
 }
+
+
+
 
 
 
@@ -169,56 +216,90 @@ public class UserQueryView {
 }
 
 
-    public void addConditionRow() {
-        if (conditionSection.getChildren().size() >= 2) {
-            addConditionButton.setDisable(true); // Deshabilitar si ya hay 2 condiciones
-            return;
+    public void addConditionRow(TextArea queryRealTimeDisplay) {
+    GridPane conditionRow = new GridPane();
+    conditionRow.setPadding(new Insets(5));
+    conditionRow.setHgap(10);
+    conditionRow.setVgap(5);
+    conditionRow.setStyle("-fx-border-color: lightgray; -fx-border-width: 1px; -fx-border-radius: 3; -fx-padding: 5;");
+    conditionRow.setMaxWidth(Double.MAX_VALUE);
+
+    ComboBox<String> fieldSelector = new ComboBox<>();
+    fieldSelector.setPromptText("Campo");
+    fieldSelector.setMaxWidth(Double.MAX_VALUE);
+
+    ComboBox<String> operatorSelector = new ComboBox<>();
+    operatorSelector.setPromptText("Operador");
+    operatorSelector.getItems().addAll("=", "LIKE", "<", ">", "<=", ">=", "<>", "IS NULL", "IS NOT NULL");
+    operatorSelector.setMaxWidth(Double.MAX_VALUE);
+
+    ComboBox<String> valueField = new ComboBox<>();
+    valueField.setPromptText("Valor");
+    valueField.setMaxWidth(Double.MAX_VALUE);
+
+    // Añadir los ComboBox al GridPane
+    conditionRow.add(fieldSelector, 0, 0);
+    conditionRow.add(operatorSelector, 1, 0);
+    conditionRow.add(valueField, 2, 0);
+
+    // Agregar listeners para actualizar el query en tiempo real
+    fieldSelector.valueProperty().addListener((observable, oldValue, newValue) -> updateQueryRealTime(queryRealTimeDisplay));
+    operatorSelector.valueProperty().addListener((observable, oldValue, newValue) -> updateQueryRealTime(queryRealTimeDisplay));
+    valueField.valueProperty().addListener((observable, oldValue, newValue) -> updateQueryRealTime(queryRealTimeDisplay));
+
+    // Añadir la fila al contenedor de condiciones
+    conditionSection.getChildren().add(conditionRow);
+}
+
+    
+    
+    
+    private void updateQueryRealTime(TextArea queryRealTimeDisplay) {
+    StringBuilder queryBuilder = new StringBuilder("SELECT * FROM ");
+
+    // Agregar tablas seleccionadas al query
+    if (firstTableSelector.getValue() != null) {
+        queryBuilder.append(firstTableSelector.getValue());
+    }
+
+    if (secondTableSelector.getValue() != null) {
+        queryBuilder.append(", ").append(secondTableSelector.getValue());
+    }
+
+    // Construir condiciones WHERE
+    if (!conditionSection.getChildren().isEmpty()) {
+        queryBuilder.append(" WHERE ");
+        for (Node node : conditionSection.getChildren()) {
+            if (node instanceof GridPane) {
+                GridPane conditionRow = (GridPane) node;
+
+                // Recuperar valores de los ComboBox en la fila
+                ComboBox<String> fieldSelector = (ComboBox<String>) conditionRow.getChildren().get(0);
+                ComboBox<String> operatorSelector = (ComboBox<String>) conditionRow.getChildren().get(1);
+                ComboBox<String> valueField = (ComboBox<String>) conditionRow.getChildren().get(2);
+
+                if (fieldSelector.getValue() != null && operatorSelector.getValue() != null && valueField.getValue() != null) {
+                    queryBuilder.append(fieldSelector.getValue())
+                                .append(" ")
+                                .append(operatorSelector.getValue())
+                                .append(" ")
+                                .append(valueField.getValue())
+                                .append(" AND ");
+                }
+            }
         }
 
-        GridPane conditionRow = new GridPane();
-        conditionRow.setPadding(new Insets(5));
-        conditionRow.setHgap(10); // Espacio horizontal entre columnas
-        conditionRow.setVgap(5); // Espacio vertical entre filas
-        conditionRow.setStyle("-fx-border-color: lightgray; -fx-border-width: 1px; -fx-border-radius: 3; -fx-padding: 5;");
-        conditionRow.setMaxWidth(Double.MAX_VALUE);
-
-        ColumnConstraints col1 = new ColumnConstraints();
-        col1.setPercentWidth(33.33);
-        col1.setHgrow(Priority.ALWAYS);
-
-        ColumnConstraints col2 = new ColumnConstraints();
-        col2.setPercentWidth(33.33);
-        col2.setHgrow(Priority.ALWAYS);
-
-        ColumnConstraints col3 = new ColumnConstraints();
-        col3.setPercentWidth(33.34);
-        col3.setHgrow(Priority.ALWAYS);
-
-        conditionRow.getColumnConstraints().addAll(col1, col2, col3);
-
-        ComboBox<String> fieldSelector = new ComboBox<>();
-        fieldSelector.setPromptText("Campo");
-        fieldSelector.setMaxWidth(Double.MAX_VALUE);
-
-        ComboBox<String> operatorSelector = new ComboBox<>();
-        operatorSelector.setPromptText("Operador");
-        operatorSelector.getItems().addAll("=", "LIKE", "<", ">", "<=", ">=", "<>", "IS NULL", "IS NOT NULL");
-        operatorSelector.setMaxWidth(Double.MAX_VALUE);
-
-        ComboBox<String> valueField = new ComboBox<>();
-        valueField.setPromptText("Valor");
-        valueField.setMaxWidth(Double.MAX_VALUE);
-
-        conditionRow.add(fieldSelector, 0, 0); // Columna 1
-        conditionRow.add(operatorSelector, 1, 0); // Columna 2
-        conditionRow.add(valueField, 2, 0); // Columna 3
-
-        conditionSection.getChildren().add(conditionRow);
-
-        if (conditionSection.getChildren().size() >= 2) {
-            addConditionButton.setDisable(true); // Deshabilitar si hay 2 condiciones
+        // Eliminar el último " AND " si existe
+        if (queryBuilder.toString().endsWith(" AND ")) {
+            queryBuilder.setLength(queryBuilder.length() - 5);
         }
     }
+
+    // Mostrar el query en tiempo real
+    queryRealTimeDisplay.setText(queryBuilder.toString());
+}
+
+
     public void clearSelections() {
     // Limpiar selección de tablas
     firstTableSelector.getSelectionModel().clearSelection();
