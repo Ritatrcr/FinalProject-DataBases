@@ -173,37 +173,46 @@ public class UserQueryController {
     }
 //adicionar otras condiciones al query
     private void addAdditionalConditions(StringBuilder queryBuilder) {
-        ObservableList<Node> conditions = view.getConditionSection().getChildren();
-        if (!conditions.isEmpty()) {
-            if (!queryBuilder.toString().contains("WHERE")) {
-                queryBuilder.append(" WHERE ");
-            } else {
-                queryBuilder.append(" AND ");
-            }
-            for (Node node : conditions) {
-                if (node instanceof HBox) {
-                    HBox condition = (HBox) node;
-                    ComboBox<String> fieldSelector = (ComboBox<String>) condition.getChildren().get(0);
-                    ComboBox<String> operatorSelector = (ComboBox<String>) condition.getChildren().get(1);
-                    TextField valueField = (TextField) condition.getChildren().get(2);
+    ObservableList<Node> conditions = view.getConditionSection().getChildren();
+    if (!conditions.isEmpty()) {
+        if (!queryBuilder.toString().contains("WHERE")) {
+            queryBuilder.append(" WHERE ");
+        } else {
+            queryBuilder.append(" AND ");
+        }
 
-                    String field = fieldSelector.getValue();
-                    String operator = operatorSelector.getValue();
-                    String value = valueField.getText();
+        for (Node node : conditions) {
+            if (node instanceof HBox) {
+                HBox condition = (HBox) node;
+                ComboBox<String> fieldSelector = (ComboBox<String>) condition.getChildren().get(0);
+                ComboBox<String> operatorSelector = (ComboBox<String>) condition.getChildren().get(1);
+                TextField valueField = (TextField) condition.getChildren().get(2);
 
-                    if (field != null && operator != null && value != null && !value.isEmpty()) {
-                        queryBuilder.append(field).append(" ").append(operator).append(" '").append(value).append("' AND ");
+                String field = fieldSelector.getValue();
+                String operator = operatorSelector.getValue();
+
+                if (field != null && operator != null) {
+                    // Manejar operadores IS NULL e IS NOT NULL
+                    if ("IS NULL".equals(operator) || "IS NOT NULL".equals(operator)) {
+                        queryBuilder.append(field).append(" ").append(operator).append(" AND ");
+                    } else {
+                        String value = valueField.getText();
+                        if (value != null && !value.isEmpty()) {
+                            queryBuilder.append(field).append(" ").append(operator).append(" '").append(value).append("' AND ");
+                        }
                     }
                 }
             }
+        }
 
-            // Eliminar el último " AND "
-            int lastIndex = queryBuilder.lastIndexOf(" AND ");
-            if (lastIndex != -1) {
-                queryBuilder.delete(lastIndex, queryBuilder.length());
-            }
+        // Eliminar el último " AND "
+        int lastIndex = queryBuilder.lastIndexOf(" AND ");
+        if (lastIndex != -1) {
+            queryBuilder.delete(lastIndex, queryBuilder.length());
         }
     }
+}
+
 
     private void executeQuery() throws SQLException {
         if (query.isEmpty()) {
@@ -242,31 +251,49 @@ public class UserQueryController {
 
 //añadir estructura de las condiciones
     private void addConditionRow() {
-        int conditionCount = view.getConditionSection().getChildren().size();
-        if (conditionCount >= 2) {
-            handleError("Solo se pueden agregar un máximo de 2 condiciones.", null);
-            return;
-        }
-
-        HBox conditionRow = new HBox(10);
-
-        ComboBox<String> fieldSelector = new ComboBox<>();
-        fieldSelector.setItems(getAllFields());
-        conditionRow.getChildren().add(fieldSelector);
-
-        ComboBox<String> operatorSelector = new ComboBox<>();
-        operatorSelector.setItems(FXCollections.observableArrayList("<", ">", "=", "<=", ">=", "<>", "LIKE", "NOT LIKE"));
-        conditionRow.getChildren().add(operatorSelector);
-
-        TextField valueField = new TextField();
-        conditionRow.getChildren().add(valueField);
-
-        view.getConditionSection().getChildren().add(conditionRow);
-
-        fieldSelector.setOnAction(event -> updateQuery());
-        operatorSelector.setOnAction(event -> updateQuery());
-        valueField.setOnKeyReleased(event -> updateQuery());
+    int conditionCount = view.getConditionSection().getChildren().size();
+    if (conditionCount >= 2) {
+        handleError("Solo se pueden agregar un máximo de 2 condiciones.", null);
+        return;
     }
+
+    HBox conditionRow = new HBox(10);
+
+    // Selector de campo
+    ComboBox<String> fieldSelector = new ComboBox<>();
+    fieldSelector.setItems(getAllFields());
+    conditionRow.getChildren().add(fieldSelector);
+
+    // Selector de operador
+    ComboBox<String> operatorSelector = new ComboBox<>();
+    operatorSelector.setItems(FXCollections.observableArrayList(
+        "<", ">", "=", "<=", ">=", "<>", "LIKE", "NOT LIKE", "IS NULL", "IS NOT NULL"
+    ));
+    conditionRow.getChildren().add(operatorSelector);
+
+    // Campo de valor
+    TextField valueField = new TextField();
+    conditionRow.getChildren().add(valueField);
+
+    // Deshabilitar el campo de valor si el operador es "IS NULL" o "IS NOT NULL"
+    operatorSelector.setOnAction(event -> {
+        String selectedOperator = operatorSelector.getValue();
+        if ("IS NULL".equals(selectedOperator) || "IS NOT NULL".equals(selectedOperator)) {
+            valueField.setDisable(true);
+            valueField.clear(); // Limpiar el campo de valor para evitar datos incorrectos
+        } else {
+            valueField.setDisable(false);
+        }
+        updateQuery(); // Actualizar el query después del cambio
+    });
+
+    // Actualizar el query cuando los valores cambien
+    fieldSelector.setOnAction(event -> updateQuery());
+    valueField.setOnKeyReleased(event -> updateQuery());
+
+    view.getConditionSection().getChildren().add(conditionRow);
+}
+
 
     private void updateQuery() {
         // Re-construir el query basado en los alias y condiciones
