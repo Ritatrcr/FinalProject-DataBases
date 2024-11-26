@@ -2,6 +2,7 @@ package controllers;
 
 import finalproject.FinalProject;
 import javafx.scene.Scene;
+import javafx.scene.control.TextArea;
 import javafx.stage.Stage;
 import modelo.DatabaseManager;
 import view.UserQueryView;
@@ -44,6 +45,7 @@ public class UserSelectionController {
         // Acción para realizar queries
         view.getRealizarQueryButton().setOnAction(event -> {
             // Crear la vista de consultas
+             TextArea sharedQueryTerminal = new TextArea();
             UserQueryView queryView = new UserQueryView();
 
             // Crear la escena de consultas

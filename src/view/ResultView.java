@@ -4,6 +4,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 /**
@@ -13,7 +14,8 @@ public class ResultView {
     private BorderPane layout;
     private TableView<ObservableList<String>> resultTable;
     private Button goBackButton;
-    private TextArea queryTerminal; // Añadido: Campo para la terminal de consulta
+    private Button addViewButton; // Botón de "Añadir Vista"
+    private TextArea queryTerminal;
 
     public ResultView() {
         layout = new BorderPane();
@@ -23,19 +25,34 @@ public class ResultView {
         resultTable = new TableView<>();
         layout.setCenter(resultTable);
 
-        // Sección inferior: botón para volver y terminal de consulta
+        // Sección inferior: botones y terminal
         VBox bottomSection = new VBox(10);
         bottomSection.setPadding(new Insets(10));
 
+        // Botones en HBox
+        HBox buttonBox = new HBox(10);
+        buttonBox.setPadding(new Insets(5));
+        
         goBackButton = new Button("Volver");
+        goBackButton.setMaxWidth(Double.MAX_VALUE);
 
-        // Añadido: Inicializar y configurar el TextArea de la terminal
+        addViewButton = new Button("Añadir Vista");
+        addViewButton.setStyle("-fx-background-color: lightblue; -fx-text-fill: black;");
+        addViewButton.setMaxWidth(Double.MAX_VALUE);
+
+        // Ajustar tamaños para que ocupen todo el ancho
+        HBox.setHgrow(goBackButton, javafx.scene.layout.Priority.ALWAYS);
+        HBox.setHgrow(addViewButton, javafx.scene.layout.Priority.ALWAYS);
+
+        buttonBox.getChildren().addAll(goBackButton, addViewButton);
+
+        // Terminal de consulta
         queryTerminal = new TextArea();
         queryTerminal.setEditable(false);
         queryTerminal.setPrefHeight(100);
         queryTerminal.setPromptText("Mensajes de consulta...");
 
-        bottomSection.getChildren().addAll(goBackButton, queryTerminal);
+        bottomSection.getChildren().addAll(buttonBox, queryTerminal);
         layout.setBottom(bottomSection);
     }
 
@@ -64,6 +81,15 @@ public class ResultView {
      */
     public Button getGoBackButton() {
         return goBackButton;
+    }
+
+    /**
+     * Devuelve el botón "Añadir Vista".
+     *
+     * @return El botón de "Añadir Vista".
+     */
+    public Button getAddViewButton() {
+        return addViewButton;
     }
 
     /**

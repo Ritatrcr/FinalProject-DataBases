@@ -1,56 +1,67 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controllers;
 
 import modelo.DatabaseManager;
 import view.ResultView;
-import javafx.scene.control.TextArea;
 
-import java.sql.ResultSet;
+import javafx.scene.control.TextInputDialog;
+
 import java.sql.SQLException;
 
 /**
- * Controlador para la vista de resultados.
+ * Controlador para la vista de resultados, con funcionalidad para crear vistas.
  */
 public class ResultViewController {
     private ResultView view;
     private DatabaseManager dbManager;
+    private String query; // Query base para la vista
+    private String selectedDatabase; // Base de datos seleccionada
 
-    public ResultViewController(ResultView view, DatabaseManager dbManager) {
+    public ResultViewController(ResultView view, DatabaseManager dbManager, String query, String selectedDatabase) {
         this.view = view;
         this.dbManager = dbManager;
+        this.query = query;
+        this.selectedDatabase = selectedDatabase;
+
+        setupAddViewButton(); // Configurar el botón "Añadir Vista"
+    }
+
+    private void setupAddViewButton() {
+        view.getAddViewButton().setOnAction(event -> {
+            // Mostrar cuadro de diálogo para ingresar el nombre de la vista
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("Crear Vista");
+            dialog.setHeaderText("Nombre de la Vista");
+            dialog.setContentText("Introduce el nombre de la vista:");
+
+            String viewName = dialog.showAndWait().orElse(null);
+
+            if (viewName == null || viewName.trim().isEmpty()) {
+                appendToTerminal("El nombre de la vista no puede estar vacío.\n");
+                return;
+            }
+
+            // Validar el query
+            if (query == null || query.isEmpty()) {
+                appendToTerminal("El query base para la vista está vacío.\n");
+                return;
+            }
+
+            // Crear la vista en la base de datos
+            String createViewSQL = "CREATE VIEW " + selectedDatabase + "." + viewName + " AS " + query;
+
+            boolean success = dbManager.executeUpdate(createViewSQL);
+            if (success) {
+                appendToTerminal("Vista creada exitosamente como: " + viewName + "\n");
+            } else {
+                appendToTerminal("Error al crear la vista. Revisa el query.\n");
+            }
+        });
     }
 
     /**
-     * Ejecuta un query y llena la tabla de resultados en la vista.
-     *
-     * @param query El query SQL a ejecutar.
-     */
-    public void executeQuery(String query) {
-        if (query == null || query.isEmpty()) {
-            appendToTerminal("Por favor, proporciona un query válido.\n");
-            return;
-        }
-
-        try {
-            // Ejecutar el query
-            ResultSet rs = dbManager.executeQuery(query);
-            view.populateTable(rs); // Llenar la tabla de resultados en la vista
-            appendToTerminal("Query ejecutado correctamente.\n");
-        } catch (SQLException e) {
-            appendToTerminal("Error ejecutando query: " + e.getMessage() + "\n");
-        }
-    }
-
-    /**
-     * Agrega texto a la terminal de la vista.
-     *
-     * @param message Mensaje a mostrar en la terminal.
+     * Agrega un mensaje al terminal en la vista.
      */
     private void appendToTerminal(String message) {
-        TextArea terminal = view.getQueryTerminal();
-        terminal.appendText(message);
+        view.getQueryTerminal().appendText(message);
     }
 }

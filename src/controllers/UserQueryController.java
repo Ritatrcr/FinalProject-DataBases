@@ -17,6 +17,7 @@ import view.DashboardView;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import javafx.scene.control.TextArea;
 
 public class UserQueryController {
     private UserQueryView view;
@@ -26,15 +27,21 @@ public class UserQueryController {
     private DashboardView dashboardview;
     private Scene mainScene;
     private String query; // Almacena el query completo
+    private TextArea sharedQueryTerminal;
+
 
     public UserQueryController(UserQueryView view, DatabaseManager dbManager, Scene mainScene) {
         this.view = view;
         this.dbManager = dbManager;
         this.mainScene = mainScene;
-        this.tableView = new TableFieldsView();
+        this.tableView = new TableFieldsView(view.getQueryTerminal()); // Pasar la terminal compartida
         this.resultView = new ResultView();
         this.dashboardview = new DashboardView();
         this.query = "";
+       
+        
+       // Inicializamos con la terminal de UserQueryView
+
         setup();
     }
 
@@ -210,17 +217,26 @@ public class UserQueryController {
     }
 
     private void navigateToResultView() throws SQLException {
-        if (query == null || query.isEmpty()) {
-            handleError("Por favor genera un query antes de ver los resultados.", null);
-            return;
-        }
-
-        ResultSet rs = dbManager.executeQuery(query);
-        resultView.populateTable(rs);
-        resultView.getGoBackButton().setOnAction(event -> mainScene.setRoot(view.getLayout()));
-
-        mainScene.setRoot(resultView.getLayout());
+    if (query == null || query.isEmpty()) {
+        handleError("Por favor genera un query antes de ver los resultados.", null);
+        return;
     }
+
+    ResultSet rs = dbManager.executeQuery(query);
+    resultView.populateTable(rs);
+    resultView.getQueryTerminal().setText(query); // Mostrar el query en la terminal
+
+    String selectedDatabase = view.getDatabaseSelector().getValue(); // Obtener la base de datos seleccionada
+
+    // Crear y configurar el controlador para la vista de resultados
+    ResultViewController resultViewController = new ResultViewController(resultView, dbManager, query, selectedDatabase);
+
+    // Configurar el botón "Volver"
+    resultView.getGoBackButton().setOnAction(event -> mainScene.setRoot(view.getLayout()));
+
+    mainScene.setRoot(resultView.getLayout());
+}
+
    
 
 

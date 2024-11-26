@@ -33,16 +33,21 @@ public class TableFieldsView {
         this.databaseName = databaseName;
     }
 
-    public TableFieldsView() {
-        layout = new BorderPane();
-        layout.setPadding(new Insets(20));
-
-        HBox centerSection = createCenterSection();
-        VBox bottomSection = createBottomSection();
-
-        layout.setCenter(centerSection);
-        layout.setBottom(bottomSection);
+    public TableFieldsView(TextArea sharedQueryTerminal) {
+    if (sharedQueryTerminal == null) {
+        throw new IllegalArgumentException("La terminal compartida no puede ser nula.");
     }
+    this.queryTerminal = sharedQueryTerminal; // Usar la terminal compartida
+    layout = new BorderPane();
+    layout.setPadding(new Insets(20));
+
+    HBox centerSection = createCenterSection();
+    VBox bottomSection = createBottomSection();
+
+    layout.setCenter(centerSection);
+    layout.setBottom(bottomSection);
+}
+
 
     private HBox createCenterSection() {
         HBox centerSection = new HBox(15);
@@ -149,19 +154,21 @@ public class TableFieldsView {
 }
 
 
-    private VBox createBottomSection() {
-        VBox bottomSection = new VBox(15);
-        bottomSection.setPadding(new Insets(10));
+   private VBox createBottomSection() {
+    VBox bottomSection = new VBox(15);
+    bottomSection.setPadding(new Insets(10));
 
-        queryTerminal = new TextArea();
-        queryTerminal.setEditable(false);
-        queryTerminal.setPrefHeight(100);
-
-        goBackButton = new Button("Volver a Configuración");
-
-        bottomSection.getChildren().addAll(new Label("Query en construcción:"), queryTerminal, goBackButton);
-        return bottomSection;
+    if (queryTerminal == null) {
+        throw new IllegalStateException("La terminal compartida no está inicializada.");
     }
+
+    goBackButton = new Button("Volver a Configuración");
+
+    bottomSection.getChildren().addAll(new Label("Query MySQL:"), queryTerminal, goBackButton);
+    return bottomSection;
+}
+
+
 
     private void adjustAliasColumnWidth(TableView<FieldAlias> tableView, double newWidth) {
         for (TableColumn<FieldAlias, ?> column : tableView.getColumns()) {
@@ -265,7 +272,7 @@ public class TableFieldsView {
         queryBuilder.append(" WHERE ").append(selectedFieldTable1).append(" = ").append(selectedFieldTable2);
     }
 
-    queryTerminal.setText(queryBuilder.toString());
+      queryTerminal.setText(queryBuilder.toString());
 }
 
 

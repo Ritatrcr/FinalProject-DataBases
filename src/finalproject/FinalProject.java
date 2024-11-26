@@ -75,6 +75,7 @@ public class FinalProject extends Application {
      * @param dbManager Instancia de DatabaseManager.
      */
     public static void showUserQueryScene(DatabaseManager dbManager) {
+        
         UserQueryView userQueryView = new UserQueryView();
         UserQueryController userQueryController = new UserQueryController(userQueryView, dbManager, primaryStage.getScene());
         // Configurar el controlador

@@ -16,7 +16,7 @@ public class UserQueryView {
     private VBox conditionSection;
 
     // Lista de tablas originales para restaurar opciones
-    private ObservableList<String> availableTables = FXCollections.observableArrayList("Tabla1", "Tabla2", "Tabla3", "Tabla4");
+   
 
     public UserQueryView() {
         layout = new BorderPane();
@@ -91,7 +91,7 @@ public class UserQueryView {
 
         addConditionButton = new Button("Añadir condición");
         addConditionButton.setMaxWidth(Double.MAX_VALUE);
-        addConditionButton.setStyle("-fx-font-size: 12px;");
+        
 
         centerSection.getChildren().addAll(conditionLabel, conditionSection, addConditionButton);
         return centerSection;
@@ -101,14 +101,20 @@ public class UserQueryView {
     VBox bottomSection = new VBox(15);
     bottomSection.setPadding(new Insets(10));
 
+    // Etiqueta para la terminal
     Label terminalLabel = new Label("Query MySQL:");
     terminalLabel.setMaxWidth(Double.MAX_VALUE);
 
-    queryTerminal = new TextArea();
-    queryTerminal.setEditable(false);
-    queryTerminal.setPrefHeight(100);
-    queryTerminal.setMaxWidth(Double.MAX_VALUE);
+    // Inicializar queryTerminal si no está ya inicializado
+    
+        queryTerminal = new TextArea();
+        queryTerminal.setEditable(false);
+        queryTerminal.setPrefHeight(100);
+        queryTerminal.setWrapText(true); // Asegura que el texto se ajuste al ancho
+        queryTerminal.setStyle("-fx-border-color: lightblue; -fx-border-width: 1px;"); // Opcional: Estilo para diferenciar
+    
 
+    // Botones en la parte inferior
     HBox buttonBox = new HBox(15);
     buttonBox.setAlignment(Pos.CENTER);
 
@@ -119,17 +125,20 @@ public class UserQueryView {
     // Botón Volver
     goBackButton = new Button("Volver");
     goBackButton.setMaxWidth(Double.MAX_VALUE);
-    
+
+    // Botón Limpiar
     clearButton = new Button("Limpiar");
     clearButton.setMaxWidth(Double.MAX_VALUE);
 
     // Añadir los botones al contenedor buttonBox
-    buttonBox.getChildren().addAll(viewResultButton, goBackButton,clearButton);
+    buttonBox.getChildren().addAll(viewResultButton, goBackButton, clearButton);
 
     // Añadir elementos al contenedor bottomSection
     bottomSection.getChildren().addAll(terminalLabel, queryTerminal, buttonBox);
+
     return bottomSection;
 }
+
 
 
     private void updateSecondTableSelector() {
@@ -257,8 +266,14 @@ public class UserQueryView {
         return addConditionButton;
     }
     public TextArea getQueryTerminal() {
-        return queryTerminal;
+    if (queryTerminal == null) {
+        queryTerminal = new TextArea(); // Inicializar si es nula
+        queryTerminal.setEditable(false);
+        queryTerminal.setPrefHeight(100);
     }
+    return queryTerminal;
+}
+
 
     public VBox getConditionSection() {
         return conditionSection;
