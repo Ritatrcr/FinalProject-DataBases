@@ -24,7 +24,7 @@ public class ResultViewController {
 
         setupAddViewButton(); // Configurar el botón "Añadir Vista"
     }
-
+ //metodo para crear vista sobre elresutado del query
     private void setupAddViewButton() {
         view.getAddViewButton().setOnAction(event -> {
             // Mostrar cuadro de diálogo para ingresar el nombre de la vista

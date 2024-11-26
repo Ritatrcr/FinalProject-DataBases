@@ -72,7 +72,7 @@ public class UserQueryController {
         view.getClearButton().setOnAction(event -> view.clearSelections());
 
     }
-
+    //carga las bases de datos
     private void loadDatabases() {
         List<String> databases = dbManager.getDatabaseNames();
         if (!databases.isEmpty()) {
@@ -80,7 +80,7 @@ public class UserQueryController {
             view.getDatabaseSelector().setItems(observableDatabases);
         }
     }
-
+//carga las tablas
     private void loadTables() {
         String database = view.getDatabaseSelector().getValue();
         if (database == null) return;
@@ -90,7 +90,7 @@ public class UserQueryController {
         view.getFirstTableSelector().setItems(observableTables);
         view.getSecondTableSelector().setItems(observableTables);
     }
-
+//muestra la estructura
     private void displaySelectedTablesStructure() {
         String database = view.getDatabaseSelector().getValue();
         if (database == null || database.isEmpty()) {
@@ -128,7 +128,7 @@ public class UserQueryController {
             handleError("Error obteniendo estructura de las tablas", e);
         }
     }
-
+//navegar a la vista de las tablas con todos sus campos
     private void navigateToTableFieldsView() {
         String database = view.getDatabaseSelector().getValue();
         String table1 = view.getFirstTableSelector().getValue();
@@ -171,7 +171,7 @@ public class UserQueryController {
         });
         mainScene.setRoot(tableView.getLayout());
     }
-
+//adicionar otras condiciones al query
     private void addAdditionalConditions(StringBuilder queryBuilder) {
         ObservableList<Node> conditions = view.getConditionSection().getChildren();
         if (!conditions.isEmpty()) {
@@ -240,7 +240,7 @@ public class UserQueryController {
    
 
 
-
+//añadir estructura de las condiciones
     private void addConditionRow() {
         int conditionCount = view.getConditionSection().getChildren().size();
         if (conditionCount >= 2) {

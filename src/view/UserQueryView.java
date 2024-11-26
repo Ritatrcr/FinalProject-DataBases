@@ -128,7 +128,7 @@ public class UserQueryView {
      * Habilita o deshabilita el botón de añadir condición según si hay dos tablas seleccionadas.
      */
     private void toggleAddConditionButton() {
-        boolean bothTablesSelected = firstTableSelector.getValue() != null && secondTableSelector.getValue() != null;
+        boolean bothTablesSelected = firstTableSelector.getValue() != null;
         addConditionButton.setDisable(!bothTablesSelected);
     }
 
@@ -142,11 +142,11 @@ public class UserQueryView {
     VBox queryDisplayContainer = new VBox();
     queryDisplayContainer.setStyle("-fx-border-color: lightgray; -fx-border-width: 1px; -fx-border-radius: 5; -fx-padding: 10;");
     queryDisplayContainer.setPadding(new Insets(5));
-    Label queryDisplayLabel = new Label("Query en tiempo real MySQL:");
+    
     TextArea queryRealTimeDisplay = new TextArea();
     queryRealTimeDisplay.setEditable(false);
     queryRealTimeDisplay.setPrefHeight(100);
-    queryDisplayContainer.getChildren().addAll(queryDisplayLabel, queryRealTimeDisplay);
+    
 
     // TextArea para la terminal principal
     queryTerminal = new TextArea();

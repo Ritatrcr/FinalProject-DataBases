@@ -226,7 +226,7 @@ public class TableFieldsView {
     public TextArea getQueryTerminal() {
         return queryTerminal;
     }
-
+//actualizar el query
     private void updateQueryTerminal() {
     StringBuilder queryBuilder = new StringBuilder();
 
@@ -267,7 +267,10 @@ public class TableFieldsView {
         String table2Name = table2FieldsTableView.getItems().get(0).getFieldName().split("\\.")[0];
         queryBuilder.append(", ").append(databaseName).append(".").append(table2Name);
     }
-
+    if (selectedFieldTable1 != null && selectedFieldTable2 == null) {
+        queryBuilder.append(selectedFieldTable1);
+    }
+    
     if (selectedFieldTable1 != null && selectedFieldTable2 != null) {
         queryBuilder.append(" WHERE ").append(selectedFieldTable1).append(" = ").append(selectedFieldTable2);
     }
@@ -334,10 +337,11 @@ public class TableFieldsView {
                 queryBuilder.append(databaseName).append(".").append(table2Name);
             }
         }
-
+        
         if (selectedFieldTable1 != null && selectedFieldTable2 != null) {
             queryBuilder.append(" WHERE ").append(selectedFieldTable1).append(" = ").append(selectedFieldTable2);
         }
+        
 
         return queryBuilder.toString();
     }

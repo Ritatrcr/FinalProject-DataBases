@@ -6,7 +6,7 @@ import view.TableFieldsView;
 public class TableViewController {
     private TableFieldsView view;
     private DatabaseManager dbManager;
-
+//constructor que recibe todos los parametros
     public TableViewController(TableFieldsView view, DatabaseManager dbManager, UserQueryController aThis) {
         this.view = view;
         this.dbManager = dbManager;
